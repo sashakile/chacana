@@ -19,6 +19,20 @@ The grammar SHALL correctly identify and parse index variance (upper and lower i
 - **WHEN** an index pair like `^a _b` is parsed
 - **THEN** it MUST correctly identify `^` as contravariant and `_` as covariant.
 
+### Requirement: Unicode Normalization
+The parser SHALL ensure that all identifiers are normalized to prevent false mismatches.
+
+#### Scenario: Normalize precomposed vs decomposed characters
+- **WHEN** an identifier contains a character like `Ḃ`
+- **THEN** it MUST be normalized to UTF-8 NFC (Normalization Form C) before processing.
+
+### Requirement: Canonical Rational Representation
+The parser SHALL ensure that rational numbers have a canonical representation.
+
+#### Scenario: Normalize rational sign
+- **WHEN** a rational number with a negative denominator is parsed (e.g., `1 / -2`)
+- **THEN** the sign MUST be hoisted to the numerator (e.g., `-1 / 2`) during the reduction pass.
+
 ## Design Details
 
 ### 1. Lexical Tokens

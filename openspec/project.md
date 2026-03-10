@@ -19,6 +19,7 @@
 ## Project Conventions
 - **Separation of Concerns**: Chacana defines the "What," while Processors (like Chacana-jl) define the "How."
 - **Spec-First Development**: All language features must be defined in the specification before being implemented.
+- **Verification-Driven**: All Chacana implementations MUST be verifiable via the **Eleguá Orchestrator** multi-tier protocol to prove mathematical equivalence.
 - **Type Safety**: The Static Type Checker is the authoritative validator for index consistency.
 
 ## Domain Context
