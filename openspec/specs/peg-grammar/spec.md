@@ -19,12 +19,13 @@ The grammar SHALL correctly identify and parse index variance (upper and lower i
 - **WHEN** an index pair like `^a _b` is parsed
 - **THEN** it MUST correctly identify `^` as contravariant and `_` as covariant.
 
-### Requirement: Unicode Normalization
-The parser SHALL ensure that all identifiers are normalized to prevent false mismatches.
+### Requirement: Unicode Normalization and Scope
+The parser SHALL ensure that the entire expression string is normalized to prevent false mismatches. 
 
 #### Scenario: Normalize precomposed vs decomposed characters
-- **WHEN** an identifier contains a character like `Ḃ`
+- **WHEN** an identifier or index name contains a character like `Ḃ`
 - **THEN** it MUST be normalized to UTF-8 NFC (Normalization Form C) before processing.
+- **AND** index names MUST be restricted to the `Basic Latin` and `Greek and Coptic` Unicode blocks to prevent visual spoofing (e.g., mixing Latin 'a' and Cyrillic 'а').
 
 ### Requirement: Canonical Rational Representation
 The parser SHALL ensure that rational numbers have a canonical representation.
@@ -38,13 +39,52 @@ The parser SHALL ensure that rational numbers have a canonical representation.
 ### 1. Lexical Tokens
 Defines basic patterns for identifiers, integers, floats, and whitespace.
 
-### 2. Grammar Rules (PEG)
-Provides the formal grammar, including:
-- **Sum**: Addition and subtraction (lowest precedence).
-- **Product**: Multiplication and wedge product.
-- **Factor**: Core tensor expressions, commutators, perturbations, scalars, and parenthesized expressions.
-- **Index List**: Mandatory whitespace between indices.
-- **Index Rules**: Variance markers (`^`, `_`) and derivative markers (`;`, `,`).
+### 2. Grammar Rules (PEG Production Rules)
+
+```peg
+# Chacana PEG Grammar v0.2.4
+
+expression = sum
+sum        = product ( (PLUS / MINUS) product )*
+product    = wedge ( STAR wedge )*
+wedge      = factor ( WEDGE factor )*
+
+factor     = tensor_expr 
+           / scalar 
+           / perturbation 
+           / commutator 
+           / LPAREN expression RPAREN
+
+tensor_expr = identifier (LBRACE index_list RBRACE)?
+index_list  = index (whitespace index)*
+index       = variance? (identifier / derivative)
+variance    = CONTRA / COVAR
+derivative  = (SEMICOLON / COMMA) identifier
+
+perturbation = AT integer LPAREN expression RPAREN
+commutator   = LBRACK expression COMMA expression RBRACK
+
+identifier  = [a-zA-Z\u0370-\u03FF][a-zA-Z0-9\u0370-\u03FF]*
+integer     = [0-9]+
+scalar      = float / integer
+
+PLUS      = "+"
+MINUS     = "-"
+STAR      = "*"
+WEDGE     = "^"
+AT        = "@"
+LBRACE    = "{"
+RBRACE    = "}"
+LBRACK    = "["
+RBRACK    = "]"
+LPAREN    = "("
+RPAREN    = ")"
+CONTRA    = "^"
+COVAR     = "_"
+SEMICOLON = ";"
+COMMA     = ","
+whitespace = [ \t\n\r]+
+```
 
 ### 3. Operator Precedence
 Defines the hierarchy from index attachment (highest) to addition/subtraction (lowest).

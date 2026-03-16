@@ -1,7 +1,7 @@
 # Specification: Chacana DSL Specification
 
 ## Purpose
-Chacana (The Bridge) is a language-agnostic, statically-typed domain-specific language (DSL) for symbolic and numerical tensor calculus. It bridges the gap between different tensor computation tools (Python, Julia, Rust, etc.) by providing a machine-parseable Penrose notation with a formal type system.
+Chacana (The Bridge) is a language-agnostic, statically-typed domain-specific language (DSL) for symbolic and numerical tensor calculus. It bridges the gap between different tensor computation tools (Python, Julia, Rust, etc.) by providing a machine-parseable Penrose notation with a formal type system. While designed to support the Eleguá orchestrator, Chacana is fully functional as a standalone library for any project requiring machine-parseable tensor expressions.
 
 ## Requirements
 
@@ -26,6 +26,13 @@ The DSL SHALL provide the structural and semantic metadata necessary to support 
 - **WHEN** a tensor is evaluated within an AD framework
 - **THEN** its declared symmetries and structural zeros MUST be exposed to enable sparse Jacobian graph coloring and reduce independent components.
 
+### Requirement: Symmetry and Structure Preservation
+The DSL SHALL ensure that every operation defines its effect on the operand's symmetry group and index structure.
+
+#### Scenario: Symmetry Breaking Operations
+- **WHEN** an operation like a projection onto a subspace is applied
+- **THEN** the resulting tensor's symmetry group MUST be re-evaluated according to formal symmetry propagation rules.
+
 ## Design Details
 
 ### 1. Design Principles
@@ -38,21 +45,39 @@ The DSL SHALL provide the structural and semantic metadata necessary to support 
 
 ### 2. The TOML Declaration Layer (The Context)
 Defines the **Global Context (Γ)** including meta information, perturbation parameters, and contraction optimization strategies.
+
+```toml
+[strategy]
+contraction_order = "optimal" # hints for the AD emitter
+active_metric = "g"          # mandatory default for implicit contractions
+
+[sparsity.Riemann]
+structural_zeros = [[0,0,0,0], [1,1,1,1]] # indices known to be zero
+
+[perturbation.eps]
+parameter = "epsilon"
+order = 2
+manifold = "M"
+```
+
 - **`[strategy]` block**: Allows specifying contraction order hints and cost annotations. Finding the optimal contraction path is NP-hard; providing a strategy explicitly enables the AD Emitter to produce heavily optimized code.
 - **`[sparsity]` and Symmetries**: Explicitly marking structural zeros and mathematical symmetries (e.g., Riemann, symmetric) to function as a Structural Oracle for AD engines.
 
 ### 3. The Static Index Type System
 Enforces typing judgments for contraction consistency, free index invariance, symmetry validity, derivative compatibility, and perturbation safety.
-- **Strict (Default)**: All Rules (1-5) must pass. Errors block processing.
-- **Relaxed**: Certain rules emit warnings instead of errors.
-- **Weil Algebra Support**: Formalizes the typing rules for tensorized Weil algebras, ensuring that higher-order partial derivatives and perturbation expansions (`@` operator) are processed in one pass while preserving type safety.
+- **Rule 1: Contraction Consistency**: A pair of indices `(a, b)` is contractible only if their names and `index_type` match.
+    - **Metric-Aware**: If an `active_metric` is defined in the strategy, same-variance contraction (`_a _a`) is permitted and interpreted as `g{^a ^b} T{_a _b}`. In multi-metric environments, explicit metric contraction is REQUIRED to avoid ambiguity.
+- **Rule 3: Symmetry Validity**: Any permutation applied to a tensor must be a valid member of its declared symmetry group. Operations MUST define **Symmetry Propagation Rules** (e.g., contracting two indices of a Riemann tensor results in a symmetric Ricci tensor).
+- **Weil Algebra Support**: Formalizes the typing rules for tensorized Weil algebras. **Note**: Weil algebra "one-pass" safety is restricted to commutative infinitesimal operators (partial derivatives, scalar perturbations). Covariant perturbations involving non-commutative derivatives (Ricci identity) require sequential processing unless a non-commutative extension is explicitly declared.
 
 ### 4. Expression DSL (Micro-syntax)
 Includes syntax for spinor tokens, exterior calculus (forms), and perturbation annotations.
 
 ### 5. Formal Denotational Semantics
-Defines the mathematical meaning of the syntax using a denotation function **⟦·⟧**.
+Defines the mathematical meaning of the syntax using a denotation function **⟦·⟧**. 
+- **Target Mapping**: `⟦T{^a _b}⟧` maps to an element of the tensor product space $V \otimes V^*$.
 - **Connections and Parallel Transport**: Maps syntax like `⟦T{^a _b ;c}⟧` directly to its mathematical meaning in terms of connections and parallel transport, guaranteeing that AD engines can generate the correct parallel transport ODEs when comparing gradients at different points on a curved manifold.
 
 ### 6. The Abstract Syntax Tree (AST) & JSON Interchange
 Provides a canonical JSON representation (MathJSON-compatible) for tool interoperability and verification in the Eleguá orchestrator.
+

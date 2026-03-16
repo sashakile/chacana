@@ -28,10 +28,22 @@ The system SHALL support verification across three distinct execution tiers to p
 
 ### 2. Implementation Roadmap
 - **Phase 1: Eleguá Core**: Generalization of the runner into a domain-agnostic orchestrator.
-- **Phase 2: Chacana-Spec**: Implementation of the standalone DSL and static type system.
+- **Phase 2: Chacana-Spec**: Implementation of the standalone DSL and static type system. Includes the Python prototype (`chacana-spec-py`) as the initial verification target.
 - **Phase 3: xAct-jl**: Completion of the literal functional port.
 - **Phase 4: Chacana-jl**: Development of the idiomatic Julia engine.
 
 ### 3. Scientific Impact
 Eleguá and Chacana represent a shift from porting code to verifying mathematics, providing an infrastructure of trust and a machine-parseable notation for physicists. 
 Furthermore, Chacana's explicit separation of notation from numerical evaluation creates the foundational structural metadata required to support native **Geometric Automatic Differentiation (AD)** within the computation layer (Tier 3).
+
+## Glossary of Terms
+
+| Term | Definition |
+| :--- | :--- |
+| **Global Context (Γ)** | The set of manifolds, tensors, metrics, and strategy hints defined in the TOML declaration layer. |
+| **ValidationToken** | A canonical JSON AST representation of a tensor expression, used for cross-tier verification. |
+| **Slot** | A specific position in a tensor's index structure (e.g., the first 'a' in `T{_a _b}`). |
+| **Micro-syntax** | The compact string notation used for tensor expressions (e.g., `R{^a _b _c _d}`). |
+| **Orchestrator** | The Eleguá task runner that coordinates symbolic tasks across multiple execution tiers. |
+| **Metric-Aware** | A parsing mode where implicit contractions are resolved using a declared `active_metric`. |
+
