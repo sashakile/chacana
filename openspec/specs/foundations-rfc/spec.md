@@ -33,4 +33,5 @@ The system SHALL support verification across three distinct execution tiers to p
 - **Phase 4: Chacana-jl**: Development of the idiomatic Julia engine.
 
 ### 3. Scientific Impact
-Eleguá and Chacana represent a shift from porting code to verifying mathematics, providing an infrastructure of trust and a machine-parseable notation for physicists.
+Eleguá and Chacana represent a shift from porting code to verifying mathematics, providing an infrastructure of trust and a machine-parseable notation for physicists. 
+Furthermore, Chacana's explicit separation of notation from numerical evaluation creates the foundational structural metadata required to support native **Geometric Automatic Differentiation (AD)** within the computation layer (Tier 3).
