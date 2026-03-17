@@ -1,8 +1,15 @@
+---
+change-id: CHG-2026-03-17-004
+version: 0.1.0
+status: DRAFT
+---
 # Specification: Chacana PEG Grammar
 
 ## Purpose
 This specification defines the formal **Parsing Expression Grammar (PEG)** for the Chacana micro-syntax. The grammar is used by Chacana Processors to transform expression strings into a canonical JSON AST for use in both symbolic and numerical engines.
+
 ## Requirements
+
 ### Requirement: Deterministic Parsing
 The PEG grammar SHALL provide a deterministic way to parse tensor expressions into a structured Abstract Syntax Tree (AST). It MUST support recursive indexing on parenthesized expressions and functional operators for algebra and geometry.
 
@@ -10,13 +17,13 @@ The PEG grammar SHALL provide a deterministic way to parse tensor expressions in
 - **WHEN** the string `R{^a _b _c _d}` is parsed
 - **THEN** it MUST produce a JSON AST representing a tensor `R` with four specified indices.
 
-#### Scenario: Parse an indexed expression
-- **WHEN** the string `(A{^a} + B{^a}){;b}` is parsed
-- **THEN** it MUST produce a JSON AST representing the covariant derivative of the sum of `A` and `B`.
-
 #### Scenario: Parse functional operators
 - **WHEN** the string `d(A ^ B)`, `L(X, T{^a _b})`, `Tr(T)`, `det(g)`, or `inv(M)` is parsed
 - **THEN** it MUST produce a JSON AST representing the corresponding mathematical operator.
+
+#### Scenario: Reject malformed operator syntax
+- **WHEN** the string `d(A ^ )` is parsed (missing operand)
+- **THEN** the parser MUST return a syntax error indicating the expected expression.
 
 ### Requirement: Index Variance Recognition
 The grammar SHALL correctly identify and parse index variance (upper and lower indices).
@@ -25,13 +32,20 @@ The grammar SHALL correctly identify and parse index variance (upper and lower i
 - **WHEN** an index pair like `^a _b` is parsed
 - **THEN** it MUST correctly identify `^` as contravariant and `_` as covariant.
 
+#### Scenario: Reject invalid variance marker
+- **WHEN** an index like `?a` is parsed
+- **THEN** the parser MUST reject the expression as syntactically invalid.
+
 ### Requirement: Unicode Normalization and Scope
 The parser SHALL ensure that the entire expression string is normalized to prevent false mismatches. 
 
 #### Scenario: Normalize precomposed vs decomposed characters
 - **WHEN** an identifier or index name contains a character like `Ḃ`
 - **THEN** it MUST be normalized to UTF-8 NFC (Normalization Form C) before processing.
-- **AND** index names MUST be restricted to the `Basic Latin` and `Greek and Coptic` Unicode blocks to prevent visual spoofing (e.g., mixing Latin 'a' and Cyrillic 'а').
+
+#### Scenario: Reject out-of-scope Unicode blocks
+- **WHEN** an identifier contains a Cyrillic character (e.g., `а`)
+- **THEN** the parser MUST reject the identifier to prevent visual spoofing.
 
 ### Requirement: Canonical Rational Representation
 The parser SHALL ensure that rational numbers have a canonical representation.
@@ -47,13 +61,13 @@ The grammar SHALL support explicit symmetrization and anti-symmetrization of ind
 - **WHEN** the string `T{_( a b _)}` is parsed
 - **THEN** it MUST produce a JSON AST representing $T_{(ab)}$.
 
-#### Scenario: Symmetrized contravariant indices
-- **WHEN** the string `T{^( a b ^)}` is parsed
-- **THEN** it MUST produce a JSON AST representing $T^{(ab)}$.
-
 #### Scenario: Anti-symmetrized indices
 - **WHEN** the string `T{_[ a b _]}` is parsed
 - **THEN** it MUST produce a JSON AST representing $T_{[ab]}$.
+
+#### Scenario: Reject nested symmetrization
+- **WHEN** the string `T{_( ( a b ) _)}` is parsed
+- **THEN** the parser MUST reject the expression as recursive symmetrization is not supported in the micro-syntax.
 
 ## Design Details
 
