@@ -2,15 +2,25 @@
 
 ## Purpose
 Chacana (The Bridge) is a language-agnostic, statically-typed domain-specific language (DSL) for symbolic and numerical tensor calculus. It bridges the gap between different tensor computation tools (Python, Julia, Rust, etc.) by providing a machine-parseable Penrose notation with a formal type system. While designed to support the Eleguá orchestrator, Chacana is fully functional as a standalone library for any project requiring machine-parseable tensor expressions.
-
 ## Requirements
-
 ### Requirement: Static Index Type Checking
-The DSL SHALL enforce a static type system for tensor expressions, ensuring they are mathematically well-formed before execution.
+The DSL SHALL enforce a static type system for tensor expressions, ensuring they are mathematically well-formed before execution. It MUST validate the index consistency of results from complex expressions and functional operators, including nested applications.
 
 #### Scenario: Verify free index invariance in a sum
 - **WHEN** a sum `A + B` is parsed
 - **THEN** the set of free indices of `A` MUST be identical to the set of free indices of `B` in name, variance, and type.
+
+#### Scenario: Verify indexed expression
+- **WHEN** an expression `(A{^a} + B{^a}){;b}` is parsed
+- **THEN** the static checker MUST verify that both `A` and `B` share the free index `^a` and that `;b` is a valid derivative for the context.
+
+#### Scenario: Validate exterior derivative rank
+- **WHEN** the exterior derivative `d(omega)` is applied to a p-form `omega`
+- **THEN** the resulting expression MUST be identified as a (p+1)-form.
+
+#### Scenario: Propagate types through nested operators
+- **WHEN** nested operators like `d( *( d(omega) ) )` are parsed
+- **THEN** the static checker MUST recursively propagate form degrees and variance transformations.
 
 ### Requirement: Language-Agnostic Declaration Format
 The DSL SHALL support a declarative TOML-based format for defining manifolds, tensors, and symmetries that is independent of any specific computation engine.
@@ -27,11 +37,19 @@ The DSL SHALL provide the structural and semantic metadata necessary to support 
 - **THEN** its declared symmetries and structural zeros MUST be exposed to enable sparse Jacobian graph coloring and reduce independent components.
 
 ### Requirement: Symmetry and Structure Preservation
-The DSL SHALL ensure that every operation defines its effect on the operand's symmetry group and index structure.
+The DSL SHALL ensure that every operation defines its effect on the operand's symmetry group and index structure. It MUST support explicit symmetrization and anti-symmetrization, ensuring mathematical validity of the grouped indices.
 
-#### Scenario: Symmetry Breaking Operations
-- **WHEN** an operation like a projection onto a subspace is applied
-- **THEN** the resulting tensor's symmetry group MUST be re-evaluated according to formal symmetry propagation rules.
+#### Scenario: Explicit Symmetrization Variance Matching
+- **WHEN** the expression `T{_( a ^b _)}` is parsed
+- **THEN** the static checker MUST flag an error because indices with different variance cannot be symmetrized.
+
+#### Scenario: Explicit Symmetrization Type Matching
+- **WHEN** the expression `T{_( a b _)}` is parsed where `a` is a Greek index and `b` is a Latin index
+- **THEN** the static checker MUST flag an error because indices of different types cannot be symmetrized.
+
+#### Scenario: Valid Explicit Symmetrization
+- **WHEN** the expression `T{_( a b _)}` is parsed with matching variance and type
+- **THEN** the resulting object MUST be assigned the corresponding symmetry group (e.g., `Symmetric({1, 2})`).
 
 ## Design Details
 
