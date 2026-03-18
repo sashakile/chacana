@@ -14,6 +14,8 @@ else:
 from chacana.ast import Variance
 from chacana.errors import ChacanaError
 
+_VALID_INDEX_TYPES = {"Latin", "Greek", "Spinor"}
+
 
 @dataclass
 class ManifoldDecl:
@@ -38,10 +40,27 @@ class TensorDecl:
 
 
 @dataclass
+class SparsityDecl:
+    name: str
+    structural_zeros: list[list[int]] = field(default_factory=list)
+
+
+@dataclass
+class PerturbationDecl:
+    name: str
+    parameter: str
+    order: int
+    manifold: str
+
+
+@dataclass
 class GlobalContext:
     manifolds: dict[str, ManifoldDecl] = field(default_factory=dict)
     tensors: dict[str, TensorDecl] = field(default_factory=dict)
     active_metric: str | None = None
+    strategy: dict[str, object] = field(default_factory=dict)
+    sparsity: dict[str, SparsityDecl] = field(default_factory=dict)
+    perturbations: dict[str, PerturbationDecl] = field(default_factory=dict)
 
 
 def _parse_variance(s: str) -> Variance:
@@ -50,6 +69,54 @@ def _parse_variance(s: str) -> Variance:
     if s in ("Covar", "covar"):
         return Variance.COVAR
     raise ChacanaError(f"Unknown variance: {s!r}")
+
+
+def _validate_context(ctx: GlobalContext) -> None:
+    """Run cross-referential validation on a fully parsed context."""
+    # Validate manifold index_type values
+    for name, m in ctx.manifolds.items():
+        if m.index_type not in _VALID_INDEX_TYPES:
+            raise ChacanaError(
+                f"Invalid index_type {m.index_type!r} for manifold {name!r}; "
+                f"must be one of {sorted(_VALID_INDEX_TYPES)}"
+            )
+
+    # Validate tensors
+    for name, t in ctx.tensors.items():
+        # Tensor must reference an existing manifold
+        if t.manifold not in ctx.manifolds:
+            raise ChacanaError(
+                f"Tensor {name!r} references unknown manifold {t.manifold!r}"
+            )
+
+        # index_pattern length must match rank (when pattern is provided)
+        if t.index_pattern and len(t.index_pattern) != t.rank:
+            raise ChacanaError(
+                f"Tensor {name!r} index_pattern length ({len(t.index_pattern)}) "
+                f"!= rank ({t.rank})"
+            )
+
+        # Symmetry indices must be in [1, rank]
+        for sym in t.symmetries:
+            for idx in sym.indices:
+                if idx < 1 or idx > t.rank:
+                    raise ChacanaError(
+                        f"Tensor {name!r} symmetry index {idx} out of range "
+                        f"[1, {t.rank}]"
+                    )
+
+    # Validate active_metric references an existing tensor
+    if ctx.active_metric is not None and ctx.active_metric not in ctx.tensors:
+        raise ChacanaError(
+            f"active_metric {ctx.active_metric!r} references unknown tensor"
+        )
+
+    # Validate perturbation manifold references
+    for name, p in ctx.perturbations.items():
+        if p.manifold not in ctx.manifolds:
+            raise ChacanaError(
+                f"perturbation {name!r} references unknown manifold {p.manifold!r}"
+            )
 
 
 def load_context(source: str | Path) -> GlobalContext:
@@ -65,10 +132,12 @@ def load_context(source: str | Path) -> GlobalContext:
 
     ctx = GlobalContext()
 
-    # Load strategy
+    # Load strategy (preserve all keys)
     strategy = data.get("strategy", {})
+    ctx.strategy = dict(strategy)
     ctx.active_metric = strategy.get("active_metric")
 
+    # Load manifolds
     for name, mdata in data.get("manifold", {}).items():
         if "dimension" not in mdata:
             raise ChacanaError(f"Manifold {name!r} missing required 'dimension'")
@@ -78,6 +147,7 @@ def load_context(source: str | Path) -> GlobalContext:
             index_type=mdata.get("index_type", "Latin"),
         )
 
+    # Load tensors
     for name, tdata in data.get("tensor", {}).items():
         pattern = [_parse_variance(v) for v in tdata.get("index_pattern", [])]
         symmetries = []
@@ -92,5 +162,24 @@ def load_context(source: str | Path) -> GlobalContext:
             index_pattern=pattern,
             symmetries=symmetries,
         )
+
+    # Load sparsity declarations
+    for name, sdata in data.get("sparsity", {}).items():
+        ctx.sparsity[name] = SparsityDecl(
+            name=name,
+            structural_zeros=sdata.get("structural_zeros", []),
+        )
+
+    # Load perturbation declarations
+    for name, pdata in data.get("perturbation", {}).items():
+        ctx.perturbations[name] = PerturbationDecl(
+            name=name,
+            parameter=pdata.get("parameter", ""),
+            order=pdata.get("order", 1),
+            manifold=pdata.get("manifold", ""),
+        )
+
+    # Run cross-referential validation after all sections are parsed
+    _validate_context(ctx)
 
     return ctx
