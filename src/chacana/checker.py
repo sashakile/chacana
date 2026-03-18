@@ -244,6 +244,137 @@ def _check_rank(token: ValidationToken, ctx: GlobalContext) -> None:
                 )
 
 
+def _resolve_rank(token: ValidationToken, ctx: GlobalContext) -> int | None:
+    """Resolve the rank of a token from its indices or context declaration.
+
+    Returns None if the rank cannot be determined.
+    """
+    # If the token has explicit indices, rank = len(indices)
+    if token.indices:
+        return len(token.indices)
+    # If it's a bare identifier, look up declared rank
+    decl = ctx.tensors.get(token.head)
+    if decl is not None:
+        return decl.rank
+    return None
+
+
+def _resolve_index_pattern(
+    token: ValidationToken, ctx: GlobalContext
+) -> list[Variance] | None:
+    """Resolve the index pattern (variance list) for a token.
+
+    Returns None if the pattern cannot be determined.
+    """
+    if token.indices:
+        return [idx.variance for idx in token.indices]
+    decl = ctx.tensors.get(token.head)
+    if decl is not None and decl.index_pattern:
+        return list(decl.index_pattern)
+    return None
+
+
+def _is_vector(token: ValidationToken, ctx: GlobalContext) -> bool | None:
+    """Check if a token represents a vector field (rank 1, contravariant).
+
+    Returns True/False if determinable, None if unknown.
+    """
+    rank = _resolve_rank(token, ctx)
+    if rank is None:
+        return None
+    if rank != 1:
+        return False
+    pattern = _resolve_index_pattern(token, ctx)
+    if pattern is None:
+        # rank 1 but no pattern info — assume it could be a vector
+        return None
+    return pattern[0] == Variance.CONTRA
+
+
+def _check_operators(token: ValidationToken, ctx: GlobalContext) -> None:
+    """Check differential geometry operator constraints.
+
+    Validates:
+    - HodgeStar: requires active_metric in context
+    - InteriorProduct: first arg must be vector, second must be p-form (p >= 1)
+    - LieDerivative: first arg must be a vector field
+    - Trace: argument must have rank >= 2 (needs indices to contract)
+    - Determinant: argument must be rank 2
+    - Inverse: argument must be rank 2
+    """
+    # --- HodgeStar ---
+    if token.head == "HodgeStar":
+        if not ctx.active_metric:
+            raise ChacanaTypeError(
+                "Hodge star operator requires an active_metric in the context"
+            )
+
+    # --- InteriorProduct ---
+    if token.head == "InteriorProduct" and len(token.args) >= 2:
+        first_arg = token.args[0]
+        second_arg = token.args[1]
+
+        # First arg must be a vector (rank 1 contravariant)
+        vec_check = _is_vector(first_arg, ctx)
+        if vec_check is False:
+            raise ChacanaTypeError(
+                "Interior product first argument must be a vector field "
+                "(rank 1 contravariant)"
+            )
+
+        # Second arg must be a p-form with p >= 1
+        second_rank = _resolve_rank(second_arg, ctx)
+        if second_rank is not None and second_rank == 0:
+            raise ChacanaTypeError(
+                "Interior product is undefined for 0-forms (rank 0); "
+                "second argument must be a p-form with p >= 1"
+            )
+
+    # --- LieDerivative ---
+    if token.head == "LieDerivative" and len(token.args) >= 1:
+        first_arg = token.args[0]
+        vec_check = _is_vector(first_arg, ctx)
+        if vec_check is False:
+            raise ChacanaTypeError(
+                "Lie derivative first argument must be a vector field "
+                "(rank 1 contravariant)"
+            )
+
+    # --- Trace ---
+    if token.head == "Trace" and len(token.args) >= 1:
+        arg = token.args[0]
+        rank = _resolve_rank(arg, ctx)
+        if rank is not None and rank < 2:
+            raise ChacanaTypeError(
+                f"Trace requires a tensor of rank >= 2, "
+                f"but argument has rank {rank}"
+            )
+
+    # --- Determinant ---
+    if token.head == "Determinant" and len(token.args) >= 1:
+        arg = token.args[0]
+        rank = _resolve_rank(arg, ctx)
+        if rank is not None and rank != 2:
+            raise ChacanaTypeError(
+                f"Determinant requires a rank-2 tensor, "
+                f"but argument has rank {rank}"
+            )
+
+    # --- Inverse ---
+    if token.head == "Inverse" and len(token.args) >= 1:
+        arg = token.args[0]
+        rank = _resolve_rank(arg, ctx)
+        if rank is not None and rank != 2:
+            raise ChacanaTypeError(
+                f"Inverse requires a rank-2 tensor, "
+                f"but argument has rank {rank}"
+            )
+
+    # Recurse into children
+    for arg in token.args:
+        _check_operators(arg, ctx)
+
+
 def _format_indices(indices: list[ChacanaIndex]) -> str:
     parts = []
     for idx in indices:
@@ -259,4 +390,5 @@ def check(token: ValidationToken, ctx: GlobalContext | None = None) -> Validatio
     _check_symmetry(token, ctx)
     if ctx is not None:
         _check_rank(token, ctx)
+        _check_operators(token, ctx)
     return token

@@ -113,6 +113,9 @@ class ChacanaVisitor(PTNodeVisitor):
             "Tr": "Trace",
             "det": "Determinant",
             "inv": "Inverse",
+            "star": "HodgeStar",
+            "hodge": "HodgeStar",
+            "i": "InteriorProduct",
         }
         return ValidationToken(head=head_map.get(head, head), args=list(args))
 
