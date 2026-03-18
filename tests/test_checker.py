@@ -652,3 +652,59 @@ class TestNodeTypeRecursion:
         )
         with pytest.raises(ChacanaTypeError, match="Free index mismatch"):
             check(token)
+
+
+# ---------------------------------------------------------------------------
+# Negate handling
+# ---------------------------------------------------------------------------
+
+
+class TestNegate:
+    """Tests for Negate node handling (subtraction produces Add + Negate)."""
+
+    def test_negate_free_indices(self):
+        """Negate(A{^a}) should have the same free indices as A{^a}."""
+        token = _make_token("A{^a} - B{^a}")
+        check(token)  # should not raise — free indices match
+
+    def test_negate_preserves_contraction_check(self):
+        """Subtraction with mismatched free indices should still fail."""
+        token = ValidationToken(
+            head="Add",
+            args=[
+                ValidationToken(
+                    head="A",
+                    indices=[ChacanaIndex("a", Variance.CONTRA)],
+                ),
+                ValidationToken(
+                    head="Negate",
+                    args=[
+                        ValidationToken(
+                            head="B",
+                            indices=[ChacanaIndex("b", Variance.CONTRA)],
+                        )
+                    ],
+                ),
+            ],
+        )
+        with pytest.raises(ChacanaTypeError, match="Free index mismatch"):
+            check(token)
+
+
+# ---------------------------------------------------------------------------
+# Empty-args functional op
+# ---------------------------------------------------------------------------
+
+
+class TestEmptyArgsFunctionalOp:
+    """d() and similar with no args should not crash the checker."""
+
+    def test_d_empty_args_no_crash(self):
+        """d() should not crash when type-checked."""
+        token = _make_token("d()")
+        check(token)  # should not raise or crash
+
+    def test_d_empty_args_with_context(self, basic_context):
+        """d() with context should not crash."""
+        token = _make_token("d()")
+        check(token, basic_context)  # should not crash

@@ -113,7 +113,13 @@ def _validate_context(ctx: GlobalContext) -> None:
 
 def load_context(source: str | Path) -> GlobalContext:
     """Load a GlobalContext from a TOML file path or string."""
-    if isinstance(source, Path) or "\n" not in source and Path(source).is_file():
+    if isinstance(source, Path):
+        try:
+            with open(source, "rb") as f:
+                data = tomllib.load(f)
+        except FileNotFoundError as e:
+            raise ChacanaError(f"Context file not found: {source}") from e
+    elif "\n" not in source and Path(source).is_file():
         with open(source, "rb") as f:
             data = tomllib.load(f)
     else:

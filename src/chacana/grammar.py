@@ -148,10 +148,21 @@ def _reject_nested_symmetrization(parse_tree: Any) -> None:
         )
 
 
+_cached_parser: ParserPython | None = None
+
+
+def _get_parser() -> ParserPython:
+    """Return a cached parser instance (created once, reused)."""
+    global _cached_parser  # noqa: PLW0603
+    if _cached_parser is None:
+        _cached_parser = create_parser()
+    return _cached_parser
+
+
 def parse_and_validate(expr: str) -> Any:
     """Parse an expression string and apply post-parse validations.
 
-    This function creates a parser, parses the (already normalized) input,
+    This function uses a cached parser, parses the (already normalized) input,
     and runs post-parse checks such as nested symmetrization rejection.
 
     Args:
@@ -165,7 +176,7 @@ def parse_and_validate(expr: str) -> Any:
         arpeggio.NoMatch: on grammar mismatch (re-raised as-is for
             callers that catch it directly).
     """
-    parser = create_parser()
+    parser = _get_parser()
     tree = parser.parse(expr)
     _reject_nested_symmetrization(tree)
     return tree

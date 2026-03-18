@@ -176,6 +176,35 @@ class TestVisitorGreekIndices:
         assert idx.variance == Variance.CONTRA
 
 
+class TestVisitorSubtraction:
+    def test_subtraction_produces_negate(self):
+        """A - B should produce Add(A, Negate(B)), not Add(A, B)."""
+        token = _parse("A - B")
+        assert token.head == "Add"
+        assert len(token.args) == 2
+        assert token.args[0].head == "A"
+        assert token.args[1].head == "Negate"
+        assert token.args[1].args[0].head == "B"
+
+    def test_subtraction_with_indices(self):
+        token = _parse("A{^a} - B{^a}")
+        assert token.head == "Add"
+        assert token.args[1].head == "Negate"
+        inner = token.args[1].args[0]
+        assert inner.head == "B"
+        assert inner.indices[0].variance == Variance.CONTRA
+
+    def test_mixed_add_subtract(self):
+        """A + B - C should produce Add(A, B, Negate(C))."""
+        token = _parse("A + B - C")
+        assert token.head == "Add"
+        assert len(token.args) == 3
+        assert token.args[0].head == "A"
+        assert token.args[1].head == "B"
+        assert token.args[2].head == "Negate"
+        assert token.args[2].args[0].head == "C"
+
+
 class TestVisitorSymmetrization:
     def test_symmetrization_indices(self):
         token = _parse("T{_( a b _)}")
@@ -185,6 +214,32 @@ class TestVisitorSymmetrization:
         assert token.indices[0].variance == Variance.COVAR
         assert token.indices[1].label == "b"
         assert token.indices[1].variance == Variance.COVAR
+
+    def test_symmetrization_metadata(self):
+        """Symmetrized groups should be recorded in metadata."""
+        token = _parse("T{_( a b _)}")
+        assert "symmetrized_groups" in token.metadata
+        assert token.metadata["symmetrized_groups"] == [[0, 1]]
+
+    def test_anti_symmetrization_metadata(self):
+        """Anti-symmetrized groups should be recorded in metadata."""
+        token = _parse("T{_[ a b _]}")
+        assert "antisymmetrized_groups" in token.metadata
+        assert token.metadata["antisymmetrized_groups"] == [[0, 1]]
+
+    def test_mixed_sym_and_plain_indices(self):
+        """T{^c _( a b _)} should have sym group at positions [1, 2]."""
+        token = _parse("T{^c _( a b _)}")
+        assert len(token.indices) == 3
+        assert token.indices[0].label == "c"
+        assert token.metadata["symmetrized_groups"] == [[1, 2]]
+
+    def test_bare_index_defaults_to_covariant(self):
+        """Bare index without variance marker defaults to covariant."""
+        token = _parse("T{a}")
+        assert len(token.indices) == 1
+        assert token.indices[0].label == "a"
+        assert token.indices[0].variance == Variance.COVAR
 
 
 class TestVisitorScalarMultiplication:

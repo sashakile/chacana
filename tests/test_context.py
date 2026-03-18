@@ -426,3 +426,10 @@ index_pattern = ["Contra", "Covar"]
         ctx = load_context(Path(toml_file))
         assert "M" in ctx.manifolds
         assert "T" in ctx.tensors
+
+    def test_load_from_nonexistent_path_raises_chacana_error(self):
+        """Loading from a non-existent Path should raise ChacanaError, not FileNotFoundError."""
+        from pathlib import Path
+
+        with pytest.raises(ChacanaError, match="not found"):
+            load_context(Path("/nonexistent/file.toml"))

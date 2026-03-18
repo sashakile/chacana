@@ -5,38 +5,59 @@ Rules 1 (contraction), 2 (free index invariance), 3 (symmetry validity).
 
 from __future__ import annotations
 
-from chacana.ast import ChacanaIndex, ValidationToken, Variance
+from collections import Counter
+
+from chacana.ast import (
+    HEAD_ADD,
+    HEAD_DETERMINANT,
+    HEAD_EXTERIOR_DERIVATIVE,
+    HEAD_HODGE_STAR,
+    HEAD_INTERIOR_PRODUCT,
+    HEAD_INVERSE,
+    HEAD_LIE_DERIVATIVE,
+    HEAD_MULTIPLY,
+    HEAD_NEGATE,
+    HEAD_NUMBER,
+    HEAD_TRACE,
+    HEAD_WEDGE,
+    ChacanaIndex,
+    ValidationToken,
+    Variance,
+)
 from chacana.context import GlobalContext
 from chacana.errors import ChacanaTypeError
 
 
 def _free_indices(token: ValidationToken) -> list[ChacanaIndex]:
     """Return the free (uncontracted) indices of a token."""
-    if token.head == "Add":
+    if token.head == HEAD_ADD:
         if token.args:
             return _free_indices(token.args[0])
         return []
 
-    if token.head == "Multiply":
+    if token.head == HEAD_NEGATE:
+        if token.args:
+            return _free_indices(token.args[0])
+        return []
+
+    if token.head == HEAD_MULTIPLY:
         all_indices: list[ChacanaIndex] = []
         for arg in token.args:
             all_indices.extend(_free_indices(arg))
         return _remove_contracted(all_indices)
 
-    if token.head == "Wedge":
+    if token.head == HEAD_WEDGE:
         all_indices = []
         for arg in token.args:
             all_indices.extend(_free_indices(arg))
         return all_indices  # Wedge products don't contract
 
-    if token.head == "ExteriorDerivative":
-        # d(p-form) -> (p+1)-form. We add a dummy index for rank tracking
-        # but for free index matching, we need to be careful.
-        # In Chacana, d(omega) doesn't have explicit indices in micro-syntax
-        # unless it's (d omega){_a _b}.
-        return _free_indices(token.args[0])
+    if token.head == HEAD_EXTERIOR_DERIVATIVE:
+        if token.args:
+            return _free_indices(token.args[0])
+        return []
 
-    if token.head == "Number":
+    if token.head == HEAD_NUMBER:
         return []
 
     # Leaf tensor or expression with indices
@@ -70,29 +91,24 @@ def _remove_contracted(indices: list[ChacanaIndex]) -> list[ChacanaIndex]:
 
 def _check_contraction(token: ValidationToken, ctx: GlobalContext | None) -> None:
     """Rule 1: Contraction indices must have opposite variance and matching index_type."""
-    if token.head in ("Multiply", "Wedge"):
+    if token.head in (HEAD_MULTIPLY, HEAD_WEDGE):
         all_indices: list[ChacanaIndex] = []
         for arg in token.args:
             _check_contraction(arg, ctx)
             all_indices.extend(_get_all_indices(arg))
 
-        if token.head == "Multiply":
-            # Check that repeated index labels have valid contraction pairing.
-            # Group by label first, then validate within each group.
+        if token.head == HEAD_MULTIPLY:
             by_label: dict[str, list[ChacanaIndex]] = {}
             for idx in all_indices:
                 by_label.setdefault(idx.label, []).append(idx)
             for label, group in by_label.items():
                 if len(group) == 2:
-                    # Check index_type match first (takes priority)
                     if group[0].index_type != group[1].index_type:
                         raise ChacanaTypeError(
                             f"Contraction index '{label}' has mismatched index type: "
                             f"{group[0].index_type.value} vs {group[1].index_type.value}"
                         )
-                    # Check variance opposition
                     if group[0].variance == group[1].variance:
-                        # Metric-aware contraction: if active_metric is present, allow it
                         if ctx and ctx.active_metric:
                             continue
                         raise ChacanaTypeError(
@@ -103,38 +119,42 @@ def _check_contraction(token: ValidationToken, ctx: GlobalContext | None) -> Non
                     raise ChacanaTypeError(
                         f"Index '{label}' appears {len(group)} times (expected at most 2)"
                     )
-    elif token.head == "Add" or token.args:
+    elif token.head == HEAD_ADD or token.args:
         for arg in token.args:
             _check_contraction(arg, ctx)
 
 
 def _get_all_indices(token: ValidationToken) -> list[ChacanaIndex]:
     """Get all indices from a token (without cancelling contractions)."""
-    if token.head in ("Add",):
+    if token.head == HEAD_ADD:
         if token.args:
             return _get_all_indices(token.args[0])
         return []
-    if token.head in ("Multiply", "Wedge"):
+    if token.head == HEAD_NEGATE:
+        if token.args:
+            return _get_all_indices(token.args[0])
+        return []
+    if token.head in (HEAD_MULTIPLY, HEAD_WEDGE):
         result: list[ChacanaIndex] = []
         for arg in token.args:
             result.extend(_get_all_indices(arg))
         return result
-    if token.head == "Number":
+    if token.head == HEAD_NUMBER:
         return []
     return list(token.indices)
 
 
 def _check_free_index_invariance(token: ValidationToken) -> None:
     """Rule 2: All terms in a sum must have the same free indices."""
-    if token.head == "Add":
+    if token.head == HEAD_ADD:
         if len(token.args) < 2:
             return
         ref = _free_indices(token.args[0])
-        ref_set = {(idx.label, idx.variance) for idx in ref}
+        ref_counted = Counter((idx.label, idx.variance) for idx in ref)
         for i, arg in enumerate(token.args[1:], 1):
             arg_free = _free_indices(arg)
-            arg_set = {(idx.label, idx.variance) for idx in arg_free}
-            if ref_set != arg_set:
+            arg_counted = Counter((idx.label, idx.variance) for idx in arg_free)
+            if ref_counted != arg_counted:
                 raise ChacanaTypeError(
                     f"Free index mismatch in sum: term 0 has "
                     f"{_format_indices(ref)}, term {i} has "
@@ -153,7 +173,6 @@ def _check_symmetry(token: ValidationToken, ctx: GlobalContext | None) -> None:
        (metadata: symmetrized_groups / antisymmetrized_groups)
     2. Declared symmetries in the context (tensor.symmetries)
     """
-    # Check explicit symmetrization groups from expression metadata
     for group_key in ("symmetrized_groups", "antisymmetrized_groups"):
         groups = token.metadata.get(group_key, [])
         kind = "symmetrization" if "anti" not in group_key else "anti-symmetrization"
@@ -176,14 +195,11 @@ def _check_symmetry(token: ValidationToken, ctx: GlobalContext | None) -> None:
                         f"'{other_idx.label}' ({other_idx.index_type.value})"
                     )
 
-    # Check declared symmetries from context
     if ctx is not None:
         decl = ctx.tensors.get(token.head)
         if decl is not None and token.indices:
             for sym in decl.symmetries:
-                # sym.indices are 1-based slot positions
                 positions = [i - 1 for i in sym.indices]
-                # Only check if all positions are within bounds
                 if all(0 <= p < len(token.indices) for p in positions):
                     ref_idx = token.indices[positions[0]]
                     for pos in positions[1:]:
@@ -203,30 +219,28 @@ def _check_symmetry(token: ValidationToken, ctx: GlobalContext | None) -> None:
                                 f"({other_idx.index_type.value})"
                             )
 
-    # Recurse into children
     for arg in token.args:
         _check_symmetry(arg, ctx)
 
 
 def _check_rank(token: ValidationToken, ctx: GlobalContext) -> None:
     """Check that tensor usage matches declared rank and index pattern."""
-    if token.head in ("Add", "Multiply", "Wedge"):
+    if token.head in (HEAD_ADD, HEAD_MULTIPLY, HEAD_WEDGE):
         for arg in token.args:
             _check_rank(arg, ctx)
         return
 
-    if token.head == "Number":
+    if token.head == HEAD_NUMBER:
         return
 
-    # Recurse into functional ops, perturbation, commutator, etc.
+    # Recurse into functional ops, perturbation, commutator, negate, etc.
     if token.args:
         for arg in token.args:
             _check_rank(arg, ctx)
 
-    # Leaf tensor
     decl = ctx.tensors.get(token.head)
     if decl is None:
-        return  # Unknown tensor, skip rank check
+        return
 
     if token.indices and len(token.indices) != decl.rank:
         raise ChacanaTypeError(
@@ -246,14 +260,9 @@ def _check_rank(token: ValidationToken, ctx: GlobalContext) -> None:
 
 
 def _resolve_rank(token: ValidationToken, ctx: GlobalContext) -> int | None:
-    """Resolve the rank of a token from its indices or context declaration.
-
-    Returns None if the rank cannot be determined.
-    """
-    # If the token has explicit indices, rank = len(indices)
+    """Resolve the rank of a token from its indices or context declaration."""
     if token.indices:
         return len(token.indices)
-    # If it's a bare identifier, look up declared rank
     decl = ctx.tensors.get(token.head)
     if decl is not None:
         return decl.rank
@@ -261,10 +270,7 @@ def _resolve_rank(token: ValidationToken, ctx: GlobalContext) -> int | None:
 
 
 def _resolve_index_pattern(token: ValidationToken, ctx: GlobalContext) -> list[Variance] | None:
-    """Resolve the index pattern (variance list) for a token.
-
-    Returns None if the pattern cannot be determined.
-    """
+    """Resolve the index pattern (variance list) for a token."""
     if token.indices:
         return [idx.variance for idx in token.indices]
     decl = ctx.tensors.get(token.head)
@@ -285,83 +291,56 @@ def _is_vector(token: ValidationToken, ctx: GlobalContext) -> bool | None:
         return False
     pattern = _resolve_index_pattern(token, ctx)
     if pattern is None:
-        # rank 1 but no pattern info — assume it could be a vector
         return None
     return pattern[0] == Variance.CONTRA
 
 
 def _check_operators(token: ValidationToken, ctx: GlobalContext) -> None:
-    """Check differential geometry operator constraints.
-
-    Validates:
-    - HodgeStar: requires active_metric in context
-    - InteriorProduct: first arg must be vector, second must be p-form (p >= 1)
-    - LieDerivative: first arg must be a vector field
-    - Trace: argument must have rank >= 2 (needs indices to contract)
-    - Determinant: argument must be rank 2
-    - Inverse: argument must be rank 2
-    """
-    # --- HodgeStar ---
-    if token.head == "HodgeStar" and not ctx.active_metric:
+    """Check differential geometry operator constraints."""
+    if token.head == HEAD_HODGE_STAR and not ctx.active_metric:
         raise ChacanaTypeError("Hodge star operator requires an active_metric in the context")
 
-    # --- InteriorProduct ---
-    if token.head == "InteriorProduct" and len(token.args) >= 2:
-        first_arg = token.args[0]
-        second_arg = token.args[1]
-
-        # First arg must be a vector (rank 1 contravariant)
-        vec_check = _is_vector(first_arg, ctx)
+    if token.head == HEAD_INTERIOR_PRODUCT and len(token.args) >= 2:
+        vec_check = _is_vector(token.args[0], ctx)
         if vec_check is False:
             raise ChacanaTypeError(
                 "Interior product first argument must be a vector field (rank 1 contravariant)"
             )
-
-        # Second arg must be a p-form with p >= 1
-        second_rank = _resolve_rank(second_arg, ctx)
+        second_rank = _resolve_rank(token.args[1], ctx)
         if second_rank is not None and second_rank == 0:
             raise ChacanaTypeError(
                 "Interior product is undefined for 0-forms (rank 0); "
                 "second argument must be a p-form with p >= 1"
             )
 
-    # --- LieDerivative ---
-    if token.head == "LieDerivative" and len(token.args) >= 1:
-        first_arg = token.args[0]
-        vec_check = _is_vector(first_arg, ctx)
+    if token.head == HEAD_LIE_DERIVATIVE and len(token.args) >= 1:
+        vec_check = _is_vector(token.args[0], ctx)
         if vec_check is False:
             raise ChacanaTypeError(
                 "Lie derivative first argument must be a vector field (rank 1 contravariant)"
             )
 
-    # --- Trace ---
-    if token.head == "Trace" and len(token.args) >= 1:
-        arg = token.args[0]
-        rank = _resolve_rank(arg, ctx)
+    if token.head == HEAD_TRACE and len(token.args) >= 1:
+        rank = _resolve_rank(token.args[0], ctx)
         if rank is not None and rank < 2:
             raise ChacanaTypeError(
                 f"Trace requires a tensor of rank >= 2, but argument has rank {rank}"
             )
 
-    # --- Determinant ---
-    if token.head == "Determinant" and len(token.args) >= 1:
-        arg = token.args[0]
-        rank = _resolve_rank(arg, ctx)
+    if token.head == HEAD_DETERMINANT and len(token.args) >= 1:
+        rank = _resolve_rank(token.args[0], ctx)
         if rank is not None and rank != 2:
             raise ChacanaTypeError(
                 f"Determinant requires a rank-2 tensor, but argument has rank {rank}"
             )
 
-    # --- Inverse ---
-    if token.head == "Inverse" and len(token.args) >= 1:
-        arg = token.args[0]
-        rank = _resolve_rank(arg, ctx)
+    if token.head == HEAD_INVERSE and len(token.args) >= 1:
+        rank = _resolve_rank(token.args[0], ctx)
         if rank is not None and rank != 2:
             raise ChacanaTypeError(
                 f"Inverse requires a rank-2 tensor, but argument has rank {rank}"
             )
 
-    # Recurse into children
     for arg in token.args:
         _check_operators(arg, ctx)
 

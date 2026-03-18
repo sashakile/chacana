@@ -18,6 +18,23 @@ class IndexType(Enum):
     SPINOR = "Spinor"
 
 
+# Canonical head strings — use these instead of raw string literals.
+HEAD_ADD = "Add"
+HEAD_NEGATE = "Negate"
+HEAD_MULTIPLY = "Multiply"
+HEAD_WEDGE = "Wedge"
+HEAD_NUMBER = "Number"
+HEAD_EXTERIOR_DERIVATIVE = "ExteriorDerivative"
+HEAD_LIE_DERIVATIVE = "LieDerivative"
+HEAD_TRACE = "Trace"
+HEAD_DETERMINANT = "Determinant"
+HEAD_INVERSE = "Inverse"
+HEAD_HODGE_STAR = "HodgeStar"
+HEAD_INTERIOR_PRODUCT = "InteriorProduct"
+HEAD_PERTURBATION = "Perturbation"
+HEAD_COMMUTATOR = "Commutator"
+
+
 @dataclass(frozen=True)
 class ChacanaIndex:
     label: str
