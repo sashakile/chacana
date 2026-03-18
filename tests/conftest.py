@@ -53,3 +53,25 @@ manifold = "M"
 rank = 1
 index_pattern = ["Contra"]
 """)
+
+
+@pytest.fixture
+def metric_context() -> GlobalContext:
+    """Context with active_metric enabled."""
+    return load_context("""
+[strategy]
+active_metric = "g"
+
+[manifold.M]
+dimension = 4
+
+[tensor.A]
+manifold = "M"
+rank = 1
+index_pattern = ["Covar"]
+
+[tensor.g]
+manifold = "M"
+rank = 2
+index_pattern = ["Covar", "Covar"]
+""")

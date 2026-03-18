@@ -4,12 +4,27 @@ from __future__ import annotations
 
 from arpeggio import PTNodeVisitor, visit_parse_tree
 
-from chacana.ast import ChacanaIndex, ValidationToken, Variance
+from chacana.ast import ChacanaIndex, IndexType, ValidationToken, Variance
 
 
-def _build_index(variance_str: str, name: str) -> ChacanaIndex:
+def _build_index(
+    variance_str: str | None,
+    name: str,
+    is_derivative: bool = False,
+    derivative_type: str | None = None,
+) -> ChacanaIndex:
     v = Variance.CONTRA if variance_str == "^" else Variance.COVAR
-    return ChacanaIndex(name=name, variance=v)
+    # Simple heuristic for index type based on alphabet for reference implementation
+    it = IndexType.LATIN
+    if any(c in "αβγδεζηθικλμνξοπρστυφχψω" for c in name.lower()):
+        it = IndexType.GREEK
+    return ChacanaIndex(
+        name=name,
+        variance=v,
+        index_type=it,
+        is_derivative=is_derivative,
+        derivative_type=derivative_type,
+    )
 
 
 class ChacanaVisitor(PTNodeVisitor):
@@ -18,11 +33,7 @@ class ChacanaVisitor(PTNodeVisitor):
         return children[0]
 
     def visit_sum_expr(self, node, children):
-        terms = []
-        for child in children:
-            if isinstance(child, str) and child in ("+", "-"):
-                continue
-            terms.append(child)
+        terms = [c for c in children if not (isinstance(c, str) and c in ("+", "-"))]
         if len(terms) == 1:
             return terms[0]
         return ValidationToken(head="Add", args=terms)
@@ -33,26 +44,87 @@ class ChacanaVisitor(PTNodeVisitor):
             return terms[0]
         return ValidationToken(head="Multiply", args=terms)
 
+    def visit_wedge_expr(self, node, children):
+        terms = [c for c in children if not (isinstance(c, str) and c == "^")]
+        if len(terms) == 1:
+            return terms[0]
+        return ValidationToken(head="Wedge", args=terms)
+
     def visit_factor(self, node, children):
+        if len(children) > 1 and isinstance(children[0], ValidationToken):
+            # functional_op with indices
+            token = children[0]
+            token.indices = children[1]
+            return token
         return children[0]
 
     def visit_tensor_expr(self, node, children):
-        name = None
+        name = children[0]
         indices = []
-        for child in children:
-            if isinstance(child, str):
-                name = child
-            elif isinstance(child, list):
-                indices = child
+        if len(children) > 1:
+            indices = children[1]
         return ValidationToken(head=name, indices=indices)
 
     def visit_index_list(self, node, children):
-        return list(children)
+        flat_indices = []
+        for child in children:
+            if isinstance(child, list):
+                flat_indices.extend(child)
+            elif isinstance(child, ChacanaIndex):
+                flat_indices.append(child)
+            # ignore trailing variance strings in ( a b _ )
+        return flat_indices
+
+    def visit_symmetrization(self, node, children):
+        # children[0] is variance, children[1] is index_list, optional children[2] is trailing variance
+        indices = children[1]
+        return indices
+
+    def visit_anti_symmetrization(self, node, children):
+        return children[1]
 
     def visit_index(self, node, children):
-        if len(children) == 2 and isinstance(children[0], str) and isinstance(children[1], str):
-            return _build_index(children[0], children[1])
-        return children[0]
+        variance_str = None
+        idx_node = None
+        for child in children:
+            if isinstance(child, str) and child in ("^", "_"):
+                variance_str = child
+            else:
+                idx_node = child
+
+        if isinstance(idx_node, tuple):  # derivative
+            dtype, name = idx_node
+            is_deriv = True
+            deriv_type = "Semicolon" if dtype == ";" else "Comma"
+            return _build_index(variance_str, name, is_deriv, deriv_type)
+        else:
+            return _build_index(variance_str, idx_node)
+
+    def visit_derivative(self, node, children):
+        return (children[0], children[1])
+
+    def visit_functional_op(self, node, children):
+        head = children[0]
+        args = children[1:]
+        # Map some common ones to canonical names if needed
+        head_map = {
+            "d": "ExteriorDerivative",
+            "L": "LieDerivative",
+            "Tr": "Trace",
+            "det": "Determinant",
+            "inv": "Inverse",
+        }
+        return ValidationToken(head=head_map.get(head, head), args=list(args))
+
+    def visit_perturbation(self, node, children):
+        order = int(children[1])
+        expr = children[2]
+        return ValidationToken(
+            head="Perturbation", args=[expr], metadata={"order": order}
+        )
+
+    def visit_commutator(self, node, children):
+        return ValidationToken(head="Commutator", args=[children[1], children[2]])
 
     def visit_variance(self, node, children):
         return node.value

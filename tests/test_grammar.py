@@ -56,6 +56,38 @@ class TestGrammarAccepts:
         result = parser.parse("T{^α _β}")
         assert result is not None
 
+    def test_wedge(self, parser):
+        result = parser.parse("A ^ B")
+        assert result is not None
+
+    def test_functional_op(self, parser):
+        result = parser.parse("d(omega)")
+        assert result is not None
+
+    def test_functional_op_multiple_args(self, parser):
+        result = parser.parse("L(X, T)")
+        assert result is not None
+
+    def test_symmetrization(self, parser):
+        result = parser.parse("T{_( a b _)}")
+        assert result is not None
+
+    def test_anti_symmetrization(self, parser):
+        result = parser.parse("T{_[ a b _]}")
+        assert result is not None
+
+    def test_derivatives(self, parser):
+        result = parser.parse("T{;a ,b}")
+        assert result is not None
+
+    def test_complex_expression(self, parser):
+        result = parser.parse("d(A ^ B){_a _b _c} + L(X, T){_a _b _c}")
+        assert result is not None
+
+    def test_perturbation(self, parser):
+        result = parser.parse("@2(A + B)")
+        assert result is not None
+
 
 class TestGrammarRejects:
     def test_invalid_variance(self, parser):

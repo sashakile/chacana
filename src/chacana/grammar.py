@@ -19,11 +19,22 @@ def sum_expr():
 
 
 def product_expr():
-    return factor, ZeroOrMore("*", factor)
+    return wedge_expr, ZeroOrMore("*", wedge_expr)
+
+
+def wedge_expr():
+    return factor, ZeroOrMore("^", factor)
 
 
 def factor():
-    return [tensor_expr, scalar, ("(", sum_expr, ")")]
+    return [
+        (functional_op, Optional("{", index_list, "}")),
+        tensor_expr,
+        scalar,
+        perturbation,
+        commutator,
+        ("(", sum_expr, ")"),
+    ]
 
 
 def tensor_expr():
@@ -31,15 +42,51 @@ def tensor_expr():
 
 
 def index_list():
-    return OneOrMore(index)
+    return OneOrMore([symmetrization, anti_symmetrization, index])
+
+
+def symmetrization():
+    return (
+        variance,
+        "(",
+        index_list,
+        Optional(variance),
+        ")",
+    )
+
+
+def anti_symmetrization():
+    return (
+        variance,
+        "[",
+        index_list,
+        Optional(variance),
+        "]",
+    )
 
 
 def index():
-    return variance, identifier
+    return Optional(variance), [derivative, identifier]
+
+
+def derivative():
+    return [";", ","], identifier
 
 
 def variance():
     return RegExMatch(r"[\^_]")
+
+
+def functional_op():
+    return identifier, "(", Optional(sum_expr, ZeroOrMore(",", sum_expr)), ")"
+
+
+def perturbation():
+    return "@", RegExMatch(r"[0-9]+"), "(", sum_expr, ")"
+
+
+def commutator():
+    return "[", sum_expr, ",", sum_expr, "]"
 
 
 def identifier():

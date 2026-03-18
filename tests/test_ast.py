@@ -6,11 +6,11 @@ from chacana.ast import ChacanaIndex, ValidationToken, Variance
 class TestChacanaIndex:
     def test_to_dict_contra(self):
         idx = ChacanaIndex(name="a", variance=Variance.CONTRA)
-        assert idx.to_dict() == {"name": "a", "variance": "Contra"}
+        assert idx.to_dict() == {"name": "a", "variance": "Contra", "type": "Latin"}
 
     def test_to_dict_covar(self):
         idx = ChacanaIndex(name="b", variance=Variance.COVAR)
-        assert idx.to_dict() == {"name": "b", "variance": "Covar"}
+        assert idx.to_dict() == {"name": "b", "variance": "Covar", "type": "Latin"}
 
     def test_frozen(self):
         idx = ChacanaIndex(name="a", variance=Variance.CONTRA)
@@ -33,7 +33,7 @@ class TestValidationToken:
         d = token.to_dict()
         assert d["head"] == "R"
         assert len(d["indices"]) == 4
-        assert d["indices"][0] == {"name": "a", "variance": "Contra"}
+        assert d["indices"][0] == {"name": "a", "variance": "Contra", "type": "Latin"}
         assert "args" not in d
         assert "value" not in d
 

@@ -84,17 +84,26 @@ sum        = product ( (PLUS / MINUS) product )*
 product    = wedge ( STAR wedge )*
 wedge      = factor ( WEDGE factor )*
 
-factor     = tensor_expr 
+factor     = functional_op
+           / tensor_expr 
            / scalar 
            / perturbation 
            / commutator 
            / LPAREN expression RPAREN
 
 tensor_expr = identifier (LBRACE index_list RBRACE)?
-index_list  = index (whitespace index)*
+index_list  = (symmetrization / anti_symmetrization / index) (whitespace (symmetrization / anti_symmetrization / index))*
+
+symmetrization      = COVAR LPAREN index_list RPAREN 
+                    / CONTRA LPAREN index_list RPAREN
+anti_symmetrization = COVAR LBRACK index_list RBRACK 
+                    / CONTRA LBRACK index_list RBRACK
+
 index       = variance? (identifier / derivative)
 variance    = CONTRA / COVAR
 derivative  = (SEMICOLON / COMMA) identifier
+
+functional_op = identifier LPAREN (expression (COMMA expression)*)? RPAREN
 
 perturbation = AT integer LPAREN expression RPAREN
 commutator   = LBRACK expression COMMA expression RBRACK
@@ -102,6 +111,7 @@ commutator   = LBRACK expression COMMA expression RBRACK
 identifier  = [a-zA-Z\u0370-\u03FF][a-zA-Z0-9\u0370-\u03FF]*
 integer     = [0-9]+
 scalar      = float / integer
+float       = [0-9]+ "." [0-9]+
 
 PLUS      = "+"
 MINUS     = "-"

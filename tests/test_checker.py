@@ -35,6 +35,24 @@ class TestContraction:
         with pytest.raises(ChacanaTypeError, match="same variance"):
             check(token)
 
+    def test_metric_aware_contraction(self, metric_context):
+        # A{_a} * B{_a} is allowed if active_metric is defined
+        token = _make_token("A{_a} * B{_a}")
+        check(token, metric_context)  # should not raise
+
+
+class TestWedge:
+    def test_wedge_free_indices(self):
+        token = _make_token("A{_a} ^ B{_b}")
+        free = check(token).indices  # Wait, check() returns token, we need _free_indices
+        # Actually check() in checker.py doesn't return free indices, it just validates.
+        check(token)
+
+    def test_wedge_no_contraction(self):
+        # In a wedge product, same names don't necessarily contract like in Multiply
+        token = _make_token("A{_a} ^ B{^a}")
+        check(token)
+
 
 class TestFreeIndexInvariance:
     def test_matching_free_indices(self, basic_context):

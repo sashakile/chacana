@@ -10,23 +10,33 @@ from chacana.errors import ChacanaTypeError
 def _free_indices(token: ValidationToken) -> list[ChacanaIndex]:
     """Return the free (uncontracted) indices of a token."""
     if token.head == "Add":
-        # All summands must have the same free indices (checked separately)
-        # Return the free indices of the first summand
         if token.args:
             return _free_indices(token.args[0])
         return []
 
     if token.head == "Multiply":
-        # Collect all indices from factors, cancel contracted pairs
         all_indices: list[ChacanaIndex] = []
         for arg in token.args:
             all_indices.extend(_free_indices(arg))
         return _remove_contracted(all_indices)
 
+    if token.head == "Wedge":
+        all_indices = []
+        for arg in token.args:
+            all_indices.extend(_free_indices(arg))
+        return all_indices  # Wedge products don't contract
+
+    if token.head == "ExteriorDerivative":
+        # d(p-form) -> (p+1)-form. We add a dummy index for rank tracking
+        # but for free index matching, we need to be careful.
+        # In Chacana, d(omega) doesn't have explicit indices in micro-syntax
+        # unless it's (d omega){_a _b}.
+        return _free_indices(token.args[0])
+
     if token.head == "Number":
         return []
 
-    # Leaf tensor: return its indices directly
+    # Leaf tensor or expression with indices
     return list(token.indices)
 
 
@@ -53,30 +63,37 @@ def _remove_contracted(indices: list[ChacanaIndex]) -> list[ChacanaIndex]:
 
 def _check_contraction(token: ValidationToken, ctx: GlobalContext | None) -> None:
     """Rule 1: Contraction indices must have opposite variance."""
-    if token.head == "Multiply":
+    if token.head in ("Multiply", "Wedge"):
         all_indices: list[ChacanaIndex] = []
         for arg in token.args:
             _check_contraction(arg, ctx)
             all_indices.extend(_get_all_indices(arg))
-        # Check that repeated index names have opposite variance
-        by_name: dict[str, list[ChacanaIndex]] = {}
-        for idx in all_indices:
-            by_name.setdefault(idx.name, []).append(idx)
-        for name, group in by_name.items():
-            if len(group) == 2:
-                if group[0].variance == group[1].variance:
+        
+        if token.head == "Multiply":
+            # Check that repeated index names have opposite variance
+            by_name: dict[str, list[ChacanaIndex]] = {}
+            for idx in all_indices:
+                by_name.setdefault(idx.name, []).append(idx)
+            for name, group in by_name.items():
+                if len(group) == 2:
+                    if group[0].variance == group[1].variance:
+                        # Metric-aware contraction: if active_metric is present, allow it
+                        if ctx and ctx.active_metric:
+                            continue
+                        raise ChacanaTypeError(
+                            f"Contraction index '{name}' appears twice with same "
+                            f"variance ({group[0].variance.value})"
+                        )
+                elif len(group) > 2:
                     raise ChacanaTypeError(
-                        f"Contraction index '{name}' appears twice with same "
-                        f"variance ({group[0].variance.value})"
+                        f"Index '{name}' appears {len(group)} times (expected at most 2)"
                     )
-            elif len(group) > 2:
-                raise ChacanaTypeError(
-                    f"Index '{name}' appears {len(group)} times (expected at most 2)"
-                )
     elif token.head == "Add":
         for arg in token.args:
             _check_contraction(arg, ctx)
-    # Leaf tensors: nothing to check for contraction
+    elif token.args:
+        for arg in token.args:
+            _check_contraction(arg, ctx)
 
 
 def _get_all_indices(token: ValidationToken) -> list[ChacanaIndex]:
@@ -85,7 +102,7 @@ def _get_all_indices(token: ValidationToken) -> list[ChacanaIndex]:
         if token.args:
             return _get_all_indices(token.args[0])
         return []
-    if token.head == "Multiply":
+    if token.head in ("Multiply", "Wedge"):
         result: list[ChacanaIndex] = []
         for arg in token.args:
             result.extend(_get_all_indices(arg))
@@ -118,7 +135,7 @@ def _check_free_index_invariance(token: ValidationToken) -> None:
 
 def _check_rank(token: ValidationToken, ctx: GlobalContext) -> None:
     """Check that tensor usage matches declared rank and index pattern."""
-    if token.head in ("Add", "Multiply"):
+    if token.head in ("Add", "Multiply", "Wedge"):
         for arg in token.args:
             _check_rank(arg, ctx)
         return

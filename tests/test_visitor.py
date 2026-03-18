@@ -66,8 +66,8 @@ class TestVisitorSerialization:
         token = _parse("R{^a _b _c _d}")
         d = token.to_dict()
         assert d["head"] == "R"
-        assert d["indices"][0] == {"name": "a", "variance": "Contra"}
-        assert d["indices"][3] == {"name": "d", "variance": "Covar"}
+        assert d["indices"][0] == {"name": "a", "variance": "Contra", "type": "Latin"}
+        assert d["indices"][3] == {"name": "d", "variance": "Covar", "type": "Latin"}
 
 
 import pytest
