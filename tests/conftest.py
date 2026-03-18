@@ -2,8 +2,7 @@
 
 import pytest
 
-from chacana.context import GlobalContext, ManifoldDecl, TensorDecl, load_context
-from chacana.ast import Variance
+from chacana.context import GlobalContext, load_context
 
 
 @pytest.fixture

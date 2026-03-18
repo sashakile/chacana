@@ -1,5 +1,7 @@
 """Tests for parse-tree → AST visitor."""
 
+import pytest
+
 from chacana.ast import Variance
 from chacana.grammar import create_parser
 from chacana.visitor import parse_to_ast
@@ -68,6 +70,3 @@ class TestVisitorSerialization:
         assert d["head"] == "R"
         assert d["indices"][0] == {"name": "a", "variance": "Contra", "type": "Latin"}
         assert d["indices"][3] == {"name": "d", "variance": "Covar", "type": "Latin"}
-
-
-import pytest
