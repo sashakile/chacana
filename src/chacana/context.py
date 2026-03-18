@@ -85,15 +85,12 @@ def _validate_context(ctx: GlobalContext) -> None:
     for name, t in ctx.tensors.items():
         # Tensor must reference an existing manifold
         if t.manifold not in ctx.manifolds:
-            raise ChacanaError(
-                f"Tensor {name!r} references unknown manifold {t.manifold!r}"
-            )
+            raise ChacanaError(f"Tensor {name!r} references unknown manifold {t.manifold!r}")
 
         # index_pattern length must match rank (when pattern is provided)
         if t.index_pattern and len(t.index_pattern) != t.rank:
             raise ChacanaError(
-                f"Tensor {name!r} index_pattern length ({len(t.index_pattern)}) "
-                f"!= rank ({t.rank})"
+                f"Tensor {name!r} index_pattern length ({len(t.index_pattern)}) != rank ({t.rank})"
             )
 
         # Symmetry indices must be in [1, rank]
@@ -101,30 +98,22 @@ def _validate_context(ctx: GlobalContext) -> None:
             for idx in sym.indices:
                 if idx < 1 or idx > t.rank:
                     raise ChacanaError(
-                        f"Tensor {name!r} symmetry index {idx} out of range "
-                        f"[1, {t.rank}]"
+                        f"Tensor {name!r} symmetry index {idx} out of range [1, {t.rank}]"
                     )
 
     # Validate active_metric references an existing tensor
     if ctx.active_metric is not None and ctx.active_metric not in ctx.tensors:
-        raise ChacanaError(
-            f"active_metric {ctx.active_metric!r} references unknown tensor"
-        )
+        raise ChacanaError(f"active_metric {ctx.active_metric!r} references unknown tensor")
 
     # Validate perturbation manifold references
     for name, p in ctx.perturbations.items():
         if p.manifold not in ctx.manifolds:
-            raise ChacanaError(
-                f"perturbation {name!r} references unknown manifold {p.manifold!r}"
-            )
+            raise ChacanaError(f"perturbation {name!r} references unknown manifold {p.manifold!r}")
 
 
 def load_context(source: str | Path) -> GlobalContext:
     """Load a GlobalContext from a TOML file path or string."""
-    if isinstance(source, Path):
-        with open(source, "rb") as f:
-            data = tomllib.load(f)
-    elif "\n" not in source and Path(source).is_file():
+    if isinstance(source, Path) or "\n" not in source and Path(source).is_file():
         with open(source, "rb") as f:
             data = tomllib.load(f)
     else:
@@ -152,9 +141,7 @@ def load_context(source: str | Path) -> GlobalContext:
         pattern = [_parse_variance(v) for v in tdata.get("index_pattern", [])]
         symmetries = []
         for sym in tdata.get("symmetries", []):
-            symmetries.append(
-                SymmetryDecl(indices=sym["indices"], type=sym["type"])
-            )
+            symmetries.append(SymmetryDecl(indices=sym["indices"], type=sym["type"]))
         ctx.tensors[name] = TensorDecl(
             name=name,
             manifold=tdata.get("manifold", ""),

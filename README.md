@@ -1,1 +1,74 @@
-# chacana
+# Chacana
+
+Chacana is a tensor calculus DSL with static type checking, implementing the
+Chacana PEG grammar specification. It parses tensor expressions into a
+MathJSON-style AST and validates index consistency, rank, symmetry, and
+differential geometry operator constraints.
+
+## Installation
+
+```bash
+uv sync --dev
+```
+
+Or with pip:
+
+```bash
+pip install -e ".[dev]"
+```
+
+Requires Python 3.10+.
+
+## Quick Example
+
+```python
+import chacana
+
+# Load a context from TOML (declares manifolds, tensors, index patterns)
+ctx = chacana.load_context("examples/basic.toml")
+
+# Parse and type-check an expression
+result = chacana.parse("R{^a _b _c _d}", context=ctx)
+print(result)
+# {'type': 'TensorExpression', 'head': 'R', 'indices': [...]}
+
+# Parse without context (no type checking)
+result = chacana.parse("A{^a} + B{^a}")
+
+# Errors are raised for invalid expressions
+chacana.parse("A{^a} + B{_a}", context=ctx)  # raises ChacanaTypeError
+```
+
+## Architecture
+
+The library is organized into a pipeline: **normalize -> parse -> visit -> check**.
+
+| Module | Role |
+|---|---|
+| `grammar.py` | Arpeggio PEG grammar definition and input normalization (Unicode NFC, character allowlists). Exposes `parse_and_validate()`. |
+| `ast.py` | AST node types: `ValidationToken` (tensor expressions, operators, sums, products) and `ChacanaIndex` (with label, variance, index type, derivative info). Output format is MathJSON-style dicts. |
+| `visitor.py` | Arpeggio parse-tree visitor that converts the raw parse tree into `ValidationToken` AST nodes. Maps functional operators (`d`, `L`, `Tr`, `det`, `inv`, `star`, `i`) to canonical names. |
+| `context.py` | TOML-based `GlobalContext` loader. Declares manifolds, tensors (rank, index patterns, symmetries), sparsity, perturbations, and an active metric. |
+| `checker.py` | Static type checker implementing contraction validity (Rule 1), free-index invariance across sums (Rule 2), symmetry consistency (Rule 3), rank checking, and differential geometry operator constraints (Hodge star, Lie derivative, interior product, trace, determinant, inverse). |
+| `errors.py` | Exception hierarchy: `ChacanaError` base, `ChacanaParseError`, `ChacanaTypeError`. |
+
+## Development
+
+Run tests:
+
+```bash
+pytest
+```
+
+Lint and format:
+
+```bash
+ruff check src/ tests/
+ruff format src/ tests/
+```
+
+## Specification
+
+The formal grammar and type system specifications live in the
+[`openspec/specs/`](openspec/specs/) directory, covering the PEG grammar,
+DSL specification, differential geometry operations, and foundations RFC.

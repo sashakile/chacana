@@ -221,6 +221,7 @@ class TestGrammarRejects:
         with pytest.raises(NoMatch):
             parser.parse("T{^^a}")
 
+
 class TestUnicodeNormalization:
     """Tests for Unicode NFC normalization (spec requirement)."""
 
@@ -244,7 +245,7 @@ class TestUnicodeNormalization:
     def test_decomposed_greek_normalizes(self):
         """Decomposed Greek characters are NFC-normalized."""
         # alpha with combining acute: ά (decomposed) -> ά (precomposed)
-        decomposed_alpha = "\u03B1\u0301"  # alpha + combining acute
+        decomposed_alpha = "\u03b1\u0301"  # alpha + combining acute
         composed_alpha = unicodedata.normalize("NFC", decomposed_alpha)
         expr = f"T{{^{decomposed_alpha}}}"
         normalized = normalize_input(expr)
@@ -356,6 +357,7 @@ class TestPublicAPI:
 
 
 # --- Helper ---
+
 
 def normalize_and_parse(expr: str):
     """Normalize input and parse, with post-parse validation."""

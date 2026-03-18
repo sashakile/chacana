@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -e
+
+echo "=== Pre-push: running tests ==="
+if ! uv run python -m pytest tests/ -q; then
+    echo ""
+    echo "Tests failed. Push aborted."
+    exit 1
+fi
+
+echo "=== Pre-push: all tests passed ==="

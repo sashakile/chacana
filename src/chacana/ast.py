@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 
 class Variance(Enum):
@@ -25,8 +26,8 @@ class ChacanaIndex:
     is_derivative: bool = False
     derivative_type: str | None = None  # "Semicolon" or "Comma"
 
-    def to_dict(self) -> dict:
-        result = {
+    def to_dict(self) -> dict[str, Any]:
+        result: dict[str, Any] = {
             "label": self.label,
             "variance": self.variance.value,
             "type": self.index_type.value,
@@ -43,10 +44,10 @@ class ValidationToken:
     indices: list[ChacanaIndex] = field(default_factory=list)
     args: list[ValidationToken] = field(default_factory=list)
     value: float | None = None
-    metadata: dict = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> dict:
-        result: dict = {"type": "TensorExpression", "head": self.head}
+    def to_dict(self) -> dict[str, Any]:
+        result: dict[str, Any] = {"type": "TensorExpression", "head": self.head}
         if self.indices:
             result["indices"] = [idx.to_dict() for idx in self.indices]
         if self.args:

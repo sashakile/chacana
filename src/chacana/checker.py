@@ -1,4 +1,7 @@
-"""Static type checker for Chacana AST — Rules 1 (contraction), 2 (free index invariance), 3 (symmetry validity)."""
+"""Static type checker for Chacana AST.
+
+Rules 1 (contraction), 2 (free index invariance), 3 (symmetry validity).
+"""
 
 from __future__ import annotations
 
@@ -100,10 +103,7 @@ def _check_contraction(token: ValidationToken, ctx: GlobalContext | None) -> Non
                     raise ChacanaTypeError(
                         f"Index '{label}' appears {len(group)} times (expected at most 2)"
                     )
-    elif token.head == "Add":
-        for arg in token.args:
-            _check_contraction(arg, ctx)
-    elif token.args:
+    elif token.head == "Add" or token.args:
         for arg in token.args:
             _check_contraction(arg, ctx)
 
@@ -149,7 +149,8 @@ def _check_symmetry(token: ValidationToken, ctx: GlobalContext | None) -> None:
     """Rule 3: Symmetrized index groups must have matching variance and index_type.
 
     Checks two sources of symmetry information:
-    1. Explicit symmetrization in the expression (metadata: symmetrized_groups / antisymmetrized_groups)
+    1. Explicit symmetrization in the expression
+       (metadata: symmetrized_groups / antisymmetrized_groups)
     2. Declared symmetries in the context (tensor.symmetries)
     """
     # Check explicit symmetrization groups from expression metadata
@@ -235,7 +236,7 @@ def _check_rank(token: ValidationToken, ctx: GlobalContext) -> None:
 
     if token.indices and decl.index_pattern:
         for i, (actual, expected) in enumerate(
-            zip(token.indices, decl.index_pattern)
+            zip(token.indices, decl.index_pattern, strict=False)
         ):
             if actual.variance != expected:
                 raise ChacanaTypeError(
@@ -259,9 +260,7 @@ def _resolve_rank(token: ValidationToken, ctx: GlobalContext) -> int | None:
     return None
 
 
-def _resolve_index_pattern(
-    token: ValidationToken, ctx: GlobalContext
-) -> list[Variance] | None:
+def _resolve_index_pattern(token: ValidationToken, ctx: GlobalContext) -> list[Variance] | None:
     """Resolve the index pattern (variance list) for a token.
 
     Returns None if the pattern cannot be determined.
@@ -303,11 +302,8 @@ def _check_operators(token: ValidationToken, ctx: GlobalContext) -> None:
     - Inverse: argument must be rank 2
     """
     # --- HodgeStar ---
-    if token.head == "HodgeStar":
-        if not ctx.active_metric:
-            raise ChacanaTypeError(
-                "Hodge star operator requires an active_metric in the context"
-            )
+    if token.head == "HodgeStar" and not ctx.active_metric:
+        raise ChacanaTypeError("Hodge star operator requires an active_metric in the context")
 
     # --- InteriorProduct ---
     if token.head == "InteriorProduct" and len(token.args) >= 2:
@@ -318,8 +314,7 @@ def _check_operators(token: ValidationToken, ctx: GlobalContext) -> None:
         vec_check = _is_vector(first_arg, ctx)
         if vec_check is False:
             raise ChacanaTypeError(
-                "Interior product first argument must be a vector field "
-                "(rank 1 contravariant)"
+                "Interior product first argument must be a vector field (rank 1 contravariant)"
             )
 
         # Second arg must be a p-form with p >= 1
@@ -336,8 +331,7 @@ def _check_operators(token: ValidationToken, ctx: GlobalContext) -> None:
         vec_check = _is_vector(first_arg, ctx)
         if vec_check is False:
             raise ChacanaTypeError(
-                "Lie derivative first argument must be a vector field "
-                "(rank 1 contravariant)"
+                "Lie derivative first argument must be a vector field (rank 1 contravariant)"
             )
 
     # --- Trace ---
@@ -346,8 +340,7 @@ def _check_operators(token: ValidationToken, ctx: GlobalContext) -> None:
         rank = _resolve_rank(arg, ctx)
         if rank is not None and rank < 2:
             raise ChacanaTypeError(
-                f"Trace requires a tensor of rank >= 2, "
-                f"but argument has rank {rank}"
+                f"Trace requires a tensor of rank >= 2, but argument has rank {rank}"
             )
 
     # --- Determinant ---
@@ -356,8 +349,7 @@ def _check_operators(token: ValidationToken, ctx: GlobalContext) -> None:
         rank = _resolve_rank(arg, ctx)
         if rank is not None and rank != 2:
             raise ChacanaTypeError(
-                f"Determinant requires a rank-2 tensor, "
-                f"but argument has rank {rank}"
+                f"Determinant requires a rank-2 tensor, but argument has rank {rank}"
             )
 
     # --- Inverse ---
@@ -366,8 +358,7 @@ def _check_operators(token: ValidationToken, ctx: GlobalContext) -> None:
         rank = _resolve_rank(arg, ctx)
         if rank is not None and rank != 2:
             raise ChacanaTypeError(
-                f"Inverse requires a rank-2 tensor, "
-                f"but argument has rank {rank}"
+                f"Inverse requires a rank-2 tensor, but argument has rank {rank}"
             )
 
     # Recurse into children

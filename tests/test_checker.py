@@ -24,12 +24,18 @@ class TestContraction:
         token = ValidationToken(
             head="Multiply",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
             ],
         )
         with pytest.raises(ChacanaTypeError, match="same variance"):
@@ -44,8 +50,7 @@ class TestContraction:
 class TestWedge:
     def test_wedge_free_indices(self):
         token = _make_token("A{_a} ^ B{_b}")
-        free = check(token).indices  # Wait, check() returns token, we need _free_indices
-        # Actually check() in checker.py doesn't return free indices, it just validates.
+        # check() validates but doesn't return free indices
         check(token)
 
     def test_wedge_no_contraction(self):
@@ -63,12 +68,18 @@ class TestFreeIndexInvariance:
         token = ValidationToken(
             head="Add",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.CONTRA),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.CONTRA),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
             ],
         )
         with pytest.raises(ChacanaTypeError, match="Free index mismatch"):
@@ -78,12 +89,18 @@ class TestFreeIndexInvariance:
         token = ValidationToken(
             head="Add",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.CONTRA),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("b", Variance.CONTRA),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.CONTRA),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("b", Variance.CONTRA),
+                    ],
+                ),
             ],
         )
         with pytest.raises(ChacanaTypeError, match="Free index mismatch"):
@@ -124,6 +141,7 @@ class TestRankCheck:
 # Rule 1 completion: index_type check in contraction
 # ---------------------------------------------------------------------------
 
+
 class TestContractionIndexType:
     """Contraction requires matching index_type (Latin vs Greek)."""
 
@@ -132,12 +150,18 @@ class TestContractionIndexType:
         token = ValidationToken(
             head="Multiply",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.CONTRA, index_type=IndexType.GREEK),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.CONTRA, index_type=IndexType.GREEK),
+                    ],
+                ),
             ],
         )
         with pytest.raises(ChacanaTypeError, match="index.type"):
@@ -148,12 +172,18 @@ class TestContractionIndexType:
         token = ValidationToken(
             head="Multiply",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.CONTRA, index_type=IndexType.LATIN),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.CONTRA, index_type=IndexType.LATIN),
+                    ],
+                ),
             ],
         )
         check(token)  # should not raise
@@ -166,17 +196,13 @@ class TestContractionIndexType:
                 ValidationToken(
                     head="A",
                     indices=[
-                        ChacanaIndex(
-                            "\u03b1", Variance.COVAR, index_type=IndexType.GREEK
-                        ),
+                        ChacanaIndex("\u03b1", Variance.COVAR, index_type=IndexType.GREEK),
                     ],
                 ),
                 ValidationToken(
                     head="B",
                     indices=[
-                        ChacanaIndex(
-                            "\u03b1", Variance.CONTRA, index_type=IndexType.GREEK
-                        ),
+                        ChacanaIndex("\u03b1", Variance.CONTRA, index_type=IndexType.GREEK),
                     ],
                 ),
             ],
@@ -188,12 +214,18 @@ class TestContractionIndexType:
         token = ValidationToken(
             head="Multiply",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.CONTRA, index_type=IndexType.GREEK),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.CONTRA, index_type=IndexType.GREEK),
+                    ],
+                ),
             ],
         )
         with pytest.raises(ChacanaTypeError, match="Latin.*Greek"):
@@ -204,12 +236,18 @@ class TestContractionIndexType:
         token = ValidationToken(
             head="Multiply",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.COVAR, index_type=IndexType.GREEK),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR, index_type=IndexType.GREEK),
+                    ],
+                ),
             ],
         )
         with pytest.raises(ChacanaTypeError, match="index.type"):
@@ -219,6 +257,7 @@ class TestContractionIndexType:
 # ---------------------------------------------------------------------------
 # Rule 3: Symmetry validation
 # ---------------------------------------------------------------------------
+
 
 class TestSymmetryValidation:
     """Symmetrized index groups must have matching variance and index_type."""
@@ -298,6 +337,7 @@ class TestSymmetryValidation:
 # More comprehensive negative-path tests
 # ---------------------------------------------------------------------------
 
+
 class TestContractionNegativePaths:
     """Additional negative-path tests for contraction checking."""
 
@@ -306,15 +346,24 @@ class TestContractionNegativePaths:
         token = ValidationToken(
             head="Multiply",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.CONTRA),
-                ]),
-                ValidationToken(head="C", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.CONTRA),
+                    ],
+                ),
+                ValidationToken(
+                    head="C",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
             ],
         )
         with pytest.raises(ChacanaTypeError, match="3 times"):
@@ -325,13 +374,19 @@ class TestContractionNegativePaths:
         token = ValidationToken(
             head="Add",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.CONTRA),
-                    ChacanaIndex("b", Variance.CONTRA),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.CONTRA),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.CONTRA),
+                        ChacanaIndex("b", Variance.CONTRA),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.CONTRA),
+                    ],
+                ),
             ],
         )
         with pytest.raises(ChacanaTypeError, match="Free index mismatch"):
@@ -342,15 +397,24 @@ class TestContractionNegativePaths:
         token = ValidationToken(
             head="Add",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.CONTRA),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("b", Variance.CONTRA),
-                ]),
-                ValidationToken(head="C", indices=[
-                    ChacanaIndex("a", Variance.CONTRA),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.CONTRA),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("b", Variance.CONTRA),
+                    ],
+                ),
+                ValidationToken(
+                    head="C",
+                    indices=[
+                        ChacanaIndex("a", Variance.CONTRA),
+                    ],
+                ),
             ],
         )
         with pytest.raises(ChacanaTypeError, match="Free index mismatch.*term 1"):
@@ -365,12 +429,18 @@ class TestContractionNegativePaths:
                 ValidationToken(
                     head="Multiply",
                     args=[
-                        ValidationToken(head="A", indices=[
-                            ChacanaIndex("a", Variance.COVAR),
-                        ]),
-                        ValidationToken(head="B", indices=[
-                            ChacanaIndex("a", Variance.COVAR),
-                        ]),
+                        ValidationToken(
+                            head="A",
+                            indices=[
+                                ChacanaIndex("a", Variance.COVAR),
+                            ],
+                        ),
+                        ValidationToken(
+                            head="B",
+                            indices=[
+                                ChacanaIndex("a", Variance.COVAR),
+                            ],
+                        ),
                     ],
                 ),
                 ValidationToken(head="C", indices=[]),
@@ -388,17 +458,26 @@ class TestContractionNegativePaths:
                 ValidationToken(
                     head="Multiply",
                     args=[
-                        ValidationToken(head="A", indices=[
-                            ChacanaIndex("a", Variance.COVAR),
-                        ]),
-                        ValidationToken(head="B", indices=[
-                            ChacanaIndex("a", Variance.COVAR),
-                        ]),
+                        ValidationToken(
+                            head="A",
+                            indices=[
+                                ChacanaIndex("a", Variance.COVAR),
+                            ],
+                        ),
+                        ValidationToken(
+                            head="B",
+                            indices=[
+                                ChacanaIndex("a", Variance.COVAR),
+                            ],
+                        ),
                     ],
                 ),
-                ValidationToken(head="C", indices=[
-                    ChacanaIndex("b", Variance.CONTRA),
-                ]),
+                ValidationToken(
+                    head="C",
+                    indices=[
+                        ChacanaIndex("b", Variance.CONTRA),
+                    ],
+                ),
             ],
         )
         with pytest.raises(ChacanaTypeError, match="same variance"):
@@ -409,6 +488,7 @@ class TestContractionNegativePaths:
 # Recursion into all node types
 # ---------------------------------------------------------------------------
 
+
 class TestNodeTypeRecursion:
     """Checker should recurse into all expression node types."""
 
@@ -417,12 +497,18 @@ class TestNodeTypeRecursion:
         inner = ValidationToken(
             head="Multiply",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
             ],
         )
         token = ValidationToken(head="ExteriorDerivative", args=[inner])
@@ -434,12 +520,18 @@ class TestNodeTypeRecursion:
         inner = ValidationToken(
             head="Multiply",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
             ],
         )
         token = ValidationToken(head="LieDerivative", args=[inner])
@@ -451,17 +543,21 @@ class TestNodeTypeRecursion:
         inner = ValidationToken(
             head="Multiply",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
             ],
         )
-        token = ValidationToken(
-            head="Perturbation", args=[inner], metadata={"order": 1}
-        )
+        token = ValidationToken(head="Perturbation", args=[inner], metadata={"order": 1})
         with pytest.raises(ChacanaTypeError, match="same variance"):
             check(token)
 
@@ -470,12 +566,18 @@ class TestNodeTypeRecursion:
         bad_product = ValidationToken(
             head="Multiply",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
             ],
         )
         good_leaf = ValidationToken(head="C", indices=[])
@@ -488,12 +590,18 @@ class TestNodeTypeRecursion:
         inner = ValidationToken(
             head="Multiply",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("a", Variance.COVAR),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("a", Variance.COVAR),
+                    ],
+                ),
             ],
         )
         token = ValidationToken(head="Trace", args=[inner])
@@ -502,9 +610,12 @@ class TestNodeTypeRecursion:
 
     def test_valid_exterior_derivative(self):
         """Valid expression inside ExteriorDerivative should pass."""
-        inner = ValidationToken(head="omega", indices=[
-            ChacanaIndex("a", Variance.COVAR),
-        ])
+        inner = ValidationToken(
+            head="omega",
+            indices=[
+                ChacanaIndex("a", Variance.COVAR),
+            ],
+        )
         token = ValidationToken(head="ExteriorDerivative", args=[inner])
         check(token)  # should not raise
 
@@ -513,21 +624,30 @@ class TestNodeTypeRecursion:
         bad_sum = ValidationToken(
             head="Add",
             args=[
-                ValidationToken(head="A", indices=[
-                    ChacanaIndex("a", Variance.CONTRA),
-                ]),
-                ValidationToken(head="B", indices=[
-                    ChacanaIndex("b", Variance.CONTRA),
-                ]),
+                ValidationToken(
+                    head="A",
+                    indices=[
+                        ChacanaIndex("a", Variance.CONTRA),
+                    ],
+                ),
+                ValidationToken(
+                    head="B",
+                    indices=[
+                        ChacanaIndex("b", Variance.CONTRA),
+                    ],
+                ),
             ],
         )
         token = ValidationToken(
             head="Multiply",
             args=[
                 bad_sum,
-                ValidationToken(head="C", indices=[
-                    ChacanaIndex("c", Variance.COVAR),
-                ]),
+                ValidationToken(
+                    head="C",
+                    indices=[
+                        ChacanaIndex("c", Variance.COVAR),
+                    ],
+                ),
             ],
         )
         with pytest.raises(ChacanaTypeError, match="Free index mismatch"):

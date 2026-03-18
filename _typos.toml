@@ -1,0 +1,21 @@
+[default]
+extend-ignore-re = [
+    # Greek letters in code
+    "\\\\u[0-9a-fA-F]{4}",
+    # Variance/index labels
+    "Covar|Contra",
+    # Regex patterns in tests (partial word matches like "symmetri")
+    "match=\"[^\"]*\"",
+]
+
+[default.extend-words]
+# Domain-specific words that are NOT typos
+iff = "iff"
+
+[files]
+extend-exclude = [
+    ".wai/",
+    ".beads/",
+    "openspec/",
+    "*.lock",
+]

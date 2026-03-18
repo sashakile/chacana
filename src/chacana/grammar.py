@@ -1,16 +1,19 @@
 """Arpeggio PEG grammar for Chacana tensor expressions."""
 
+from __future__ import annotations
+
 import re
 import unicodedata
+from typing import Any
 
 from arpeggio import (
     EOF,
     OneOrMore,
     Optional,
+    ParserPython,
     RegExMatch,
     ZeroOrMore,
 )
-from arpeggio import ParserPython
 
 from chacana.errors import ChacanaParseError
 
@@ -109,7 +112,7 @@ def normalize_input(expr: str) -> str:
     return normalized
 
 
-def _has_nested_symmetrization(node, depth=0) -> bool:
+def _has_nested_symmetrization(node: Any, depth: int = 0) -> bool:
     """Walk the parse tree to detect nested symmetrization/anti-symmetrization.
 
     Returns True if any symmetrization or anti-symmetrization node contains
@@ -132,7 +135,7 @@ def _has_nested_symmetrization(node, depth=0) -> bool:
     return False
 
 
-def _reject_nested_symmetrization(parse_tree) -> None:
+def _reject_nested_symmetrization(parse_tree: Any) -> None:
     """Post-parse validation: reject nested symmetrization.
 
     Raises:
@@ -141,12 +144,11 @@ def _reject_nested_symmetrization(parse_tree) -> None:
     """
     if _has_nested_symmetrization(parse_tree):
         raise ChacanaParseError(
-            "Nested symmetrization/anti-symmetrization is not supported "
-            "in Chacana expressions."
+            "Nested symmetrization/anti-symmetrization is not supported in Chacana expressions."
         )
 
 
-def parse_and_validate(expr: str):
+def parse_and_validate(expr: str) -> Any:
     """Parse an expression string and apply post-parse validations.
 
     This function creates a parser, parses the (already normalized) input,
@@ -172,23 +174,23 @@ def parse_and_validate(expr: str):
 # --- PEG Grammar Rules ---
 
 
-def expression():
+def expression() -> Any:
     return sum_expr, EOF
 
 
-def sum_expr():
+def sum_expr() -> Any:
     return product_expr, ZeroOrMore(["+", "-"], product_expr)
 
 
-def product_expr():
+def product_expr() -> Any:
     return wedge_expr, ZeroOrMore("*", wedge_expr)
 
 
-def wedge_expr():
+def wedge_expr() -> Any:
     return factor, ZeroOrMore("^", factor)
 
 
-def factor():
+def factor() -> Any:
     return [
         (functional_op, Optional("{", index_list, "}")),
         tensor_expr,
@@ -199,15 +201,15 @@ def factor():
     ]
 
 
-def tensor_expr():
+def tensor_expr() -> Any:
     return identifier, Optional("{", index_list, "}")
 
 
-def index_list():
+def index_list() -> Any:
     return OneOrMore([symmetrization, anti_symmetrization, index])
 
 
-def symmetrization():
+def symmetrization() -> Any:
     return (
         variance,
         "(",
@@ -217,7 +219,7 @@ def symmetrization():
     )
 
 
-def anti_symmetrization():
+def anti_symmetrization() -> Any:
     return (
         variance,
         "[",
@@ -227,37 +229,37 @@ def anti_symmetrization():
     )
 
 
-def index():
+def index() -> Any:
     return Optional(variance), [derivative, identifier]
 
 
-def derivative():
+def derivative() -> Any:
     return [";", ","], identifier
 
 
-def variance():
+def variance() -> Any:
     return RegExMatch(r"[\^_]")
 
 
-def functional_op():
+def functional_op() -> Any:
     return identifier, "(", Optional(sum_expr, ZeroOrMore(",", sum_expr)), ")"
 
 
-def perturbation():
+def perturbation() -> Any:
     return "@", RegExMatch(r"[0-9]+"), "(", sum_expr, ")"
 
 
-def commutator():
+def commutator() -> Any:
     return "[", sum_expr, ",", sum_expr, "]"
 
 
-def identifier():
+def identifier() -> Any:
     return RegExMatch(r"[a-zA-Z\u0370-\u03FF][a-zA-Z0-9\u0370-\u03FF]*")
 
 
-def scalar():
+def scalar() -> Any:
     return RegExMatch(r"[0-9]+(\.[0-9]+)?")
 
 
-def create_parser(**kwargs) -> ParserPython:
+def create_parser(**kwargs: Any) -> ParserPython:
     return ParserPython(expression, skipws=True, **kwargs)

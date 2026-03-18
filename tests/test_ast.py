@@ -15,6 +15,7 @@ class TestChacanaIndex:
     def test_frozen(self):
         idx = ChacanaIndex(label="a", variance=Variance.CONTRA)
         import pytest
+
         with pytest.raises(AttributeError):
             idx.label = "b"
 

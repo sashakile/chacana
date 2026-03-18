@@ -1,6 +1,8 @@
-"""Chacana — a tensor calculus DSL with static type checking."""
+"""Chacana -- a tensor calculus DSL with static type checking."""
 
 from __future__ import annotations
+
+from typing import Any
 
 from chacana.checker import check
 from chacana.context import GlobalContext, load_context
@@ -20,9 +22,7 @@ __all__ = [
 ]
 
 
-def parse(
-    expr: str, *, context: GlobalContext | None = None
-) -> dict:
+def parse(expr: str, *, context: GlobalContext | None = None) -> dict[str, Any]:
     """Parse a tensor expression and optionally type-check it.
 
     Applies Unicode NFC normalization and rejects out-of-scope characters

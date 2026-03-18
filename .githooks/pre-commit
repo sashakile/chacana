@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -e
+
+echo "=== Pre-commit: running spell checker ==="
+if ! uvx typos src/ tests/ README.md; then
+    echo ""
+    echo "Spell check failed. To fix, review the typos above."
+    echo "  Add false positives to _typos.toml [default.extend-words]"
+    exit 1
+fi
+
+echo "=== Pre-commit: running linter ==="
+if ! uv run ruff check src/ tests/; then
+    echo ""
+    echo "Lint check failed. To fix, run:"
+    echo "  uv run ruff check --fix src/ tests/ && uv run ruff format src/ tests/"
+    exit 1
+fi
+
+echo "=== Pre-commit: running formatter check ==="
+if ! uv run ruff format --check src/ tests/; then
+    echo ""
+    echo "Format check failed. To fix, run:"
+    echo "  uv run ruff check --fix src/ tests/ && uv run ruff format src/ tests/"
+    exit 1
+fi
+
+echo "=== Pre-commit: running type checker ==="
+if ! uv run mypy src/chacana/; then
+    echo ""
+    echo "Type check failed. Fix the errors above."
+    exit 1
+fi
+
+echo "=== Pre-commit: all checks passed ==="

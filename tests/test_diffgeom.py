@@ -8,7 +8,7 @@ Covers spec requirements from openspec/specs/differential-geometry/spec.md:
 
 import pytest
 
-from chacana.ast import ChacanaIndex, IndexType, ValidationToken, Variance
+from chacana.ast import ValidationToken
 from chacana.checker import check
 from chacana.context import GlobalContext, load_context
 from chacana.errors import ChacanaTypeError
@@ -202,13 +202,15 @@ class TestHodgeStar:
     def test_hodge_without_active_metric_fails(self, no_metric_context):
         """Spec: hodge(omega) without active_metric must raise ChacanaTypeError."""
         token = _make_token("hodge(omega)")
-        with pytest.raises(ChacanaTypeError, match="[Hh]odge.*metric|metric.*[Hh]odge|active_metric"):
+        pat = "[Hh]odge.*metric|metric.*[Hh]odge|active_metric"
+        with pytest.raises(ChacanaTypeError, match=pat):
             check(token, no_metric_context)
 
     def test_star_without_active_metric_fails(self, no_metric_context):
         """star(omega) without active_metric must raise ChacanaTypeError."""
         token = _make_token("star(omega)")
-        with pytest.raises(ChacanaTypeError, match="[Hh]odge.*metric|metric.*[Hh]odge|active_metric"):
+        pat = "[Hh]odge.*metric|metric.*[Hh]odge|active_metric"
+        with pytest.raises(ChacanaTypeError, match=pat):
             check(token, no_metric_context)
 
     def test_hodge_without_any_context(self):
@@ -245,7 +247,8 @@ class TestInteriorProduct:
         """First arg of i(...) must be a vector (rank 1, contravariant)."""
         # omega is a 1-form (covariant), not a vector
         token = _make_token("i(omega, omega)")
-        with pytest.raises(ChacanaTypeError, match="[Ii]nterior.*vector|first.*vector|contravariant"):
+        pat = "[Ii]nterior.*vector|first.*vector|contravariant"
+        with pytest.raises(ChacanaTypeError, match=pat):
             check(token, diffgeom_context)
 
 
@@ -392,35 +395,43 @@ class TestDiffGeomEndToEnd:
 
     def test_hodge_e2e_with_metric(self, diffgeom_context):
         import chacana
+
         result = chacana.parse("hodge(omega)", context=diffgeom_context)
         assert result["head"] == "HodgeStar"
 
     def test_hodge_e2e_without_metric_fails(self, no_metric_context):
         import chacana
-        with pytest.raises(ChacanaTypeError, match="[Hh]odge.*metric|metric.*[Hh]odge|active_metric"):
+
+        pat = "[Hh]odge.*metric|metric.*[Hh]odge|active_metric"
+        with pytest.raises(ChacanaTypeError, match=pat):
             chacana.parse("hodge(omega)", context=no_metric_context)
 
     def test_interior_product_e2e(self, diffgeom_context):
         import chacana
+
         result = chacana.parse("i(X, omega)", context=diffgeom_context)
         assert result["head"] == "InteriorProduct"
 
     def test_lie_derivative_e2e(self, diffgeom_context):
         import chacana
+
         result = chacana.parse("L(X, g{_a _b})", context=diffgeom_context)
         assert result["head"] == "LieDerivative"
 
     def test_trace_e2e(self, diffgeom_context):
         import chacana
+
         result = chacana.parse("Tr(T{^a _b})", context=diffgeom_context)
         assert result["head"] == "Trace"
 
     def test_det_e2e(self, diffgeom_context):
         import chacana
+
         result = chacana.parse("det(g{_a _b})", context=diffgeom_context)
         assert result["head"] == "Determinant"
 
     def test_inv_e2e(self, diffgeom_context):
         import chacana
+
         result = chacana.parse("inv(g{_a _b})", context=diffgeom_context)
         assert result["head"] == "Inverse"

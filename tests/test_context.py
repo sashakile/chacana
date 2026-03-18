@@ -4,12 +4,6 @@ import pytest
 
 from chacana.ast import Variance
 from chacana.context import (
-    GlobalContext,
-    ManifoldDecl,
-    PerturbationDecl,
-    SparsityDecl,
-    SymmetryDecl,
-    TensorDecl,
     load_context,
 )
 from chacana.errors import ChacanaError
@@ -32,7 +26,10 @@ index_pattern = ["Contra", "Covar", "Covar", "Covar"]
         assert "R" in ctx.tensors
         assert ctx.tensors["R"].rank == 4
         assert ctx.tensors["R"].index_pattern == [
-            Variance.CONTRA, Variance.COVAR, Variance.COVAR, Variance.COVAR,
+            Variance.CONTRA,
+            Variance.COVAR,
+            Variance.COVAR,
+            Variance.COVAR,
         ]
 
     def test_missing_dimension(self):
