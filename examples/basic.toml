@@ -1,0 +1,28 @@
+[manifold.M]
+dimension = 4
+index_type = "Latin"
+
+[tensor.R]
+manifold = "M"
+rank = 4
+index_pattern = ["Contra", "Covar", "Covar", "Covar"]
+
+[tensor.T]
+manifold = "M"
+rank = 2
+index_pattern = ["Contra", "Covar"]
+
+[tensor.A]
+manifold = "M"
+rank = 1
+index_pattern = ["Contra"]
+
+[tensor.B]
+manifold = "M"
+rank = 1
+index_pattern = ["Contra"]
+
+[tensor.g]
+manifold = "M"
+rank = 2
+index_pattern = ["Covar", "Covar"]

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "chacana"
+version = "0.1.0"
+description = "A tensor calculus DSL with static type checking"
+requires-python = ">=3.10"
+dependencies = [
+    "arpeggio>=2.0",
+    "tomli>=2.0; python_version < '3.11'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/chacana"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
