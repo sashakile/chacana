@@ -2,7 +2,7 @@
 set -e
 
 echo "=== Pre-commit: running spell checker ==="
-if ! uvx typos src/ tests/ README.md; then
+if ! uvx typos src/ tests/ README.md .wai/ openspec/; then
     echo ""
     echo "Spell check failed. To fix, review the typos above."
     echo "  Add false positives to _typos.toml [default.extend-words]"

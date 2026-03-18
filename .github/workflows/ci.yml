@@ -14,7 +14,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --dev
       - name: Spell check
-        run: uvx typos src/ tests/ README.md
+        run: uvx typos src/ tests/ README.md .wai/ openspec/
       - run: uv run ruff check src/ tests/
       - run: uv run ruff format --check src/ tests/
       - name: Type check

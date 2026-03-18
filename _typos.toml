@@ -14,8 +14,6 @@ iff = "iff"
 
 [files]
 extend-exclude = [
-    ".wai/",
     ".beads/",
-    "openspec/",
     "*.lock",
 ]
