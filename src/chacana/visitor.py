@@ -19,7 +19,7 @@ def _build_index(
     if any(c in "αβγδεζηθικλμνξοπρστυφχψω" for c in name.lower()):
         it = IndexType.GREEK
     return ChacanaIndex(
-        name=name,
+        label=name,
         variance=v,
         index_type=it,
         is_derivative=is_derivative,
@@ -117,14 +117,14 @@ class ChacanaVisitor(PTNodeVisitor):
         return ValidationToken(head=head_map.get(head, head), args=list(args))
 
     def visit_perturbation(self, node, children):
-        order = int(children[1])
-        expr = children[2]
+        order = int(children[0])
+        expr = children[1]
         return ValidationToken(
             head="Perturbation", args=[expr], metadata={"order": order}
         )
 
     def visit_commutator(self, node, children):
-        return ValidationToken(head="Commutator", args=[children[1], children[2]])
+        return ValidationToken(head="Commutator", args=[children[0], children[1]])
 
     def visit_variance(self, node, children):
         return node.value

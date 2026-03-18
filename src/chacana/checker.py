@@ -51,7 +51,7 @@ def _remove_contracted(indices: list[ChacanaIndex]) -> list[ChacanaIndex]:
         for j, other in enumerate(indices):
             if j <= i or j in consumed:
                 continue
-            if idx.name == other.name and idx.variance != other.variance:
+            if idx.label == other.label and idx.variance != other.variance:
                 consumed.add(i)
                 consumed.add(j)
                 found_pair = True
@@ -73,7 +73,7 @@ def _check_contraction(token: ValidationToken, ctx: GlobalContext | None) -> Non
             # Check that repeated index names have opposite variance
             by_name: dict[str, list[ChacanaIndex]] = {}
             for idx in all_indices:
-                by_name.setdefault(idx.name, []).append(idx)
+                by_name.setdefault(idx.label, []).append(idx)
             for name, group in by_name.items():
                 if len(group) == 2:
                     if group[0].variance == group[1].variance:
@@ -118,10 +118,10 @@ def _check_free_index_invariance(token: ValidationToken) -> None:
         if len(token.args) < 2:
             return
         ref = _free_indices(token.args[0])
-        ref_set = {(idx.name, idx.variance) for idx in ref}
+        ref_set = {(idx.label, idx.variance) for idx in ref}
         for i, arg in enumerate(token.args[1:], 1):
             arg_free = _free_indices(arg)
-            arg_set = {(idx.name, idx.variance) for idx in arg_free}
+            arg_set = {(idx.label, idx.variance) for idx in arg_free}
             if ref_set != arg_set:
                 raise ChacanaTypeError(
                     f"Free index mismatch in sum: term 0 has "
@@ -169,7 +169,7 @@ def _format_indices(indices: list[ChacanaIndex]) -> str:
     parts = []
     for idx in indices:
         prefix = "^" if idx.variance == Variance.CONTRA else "_"
-        parts.append(f"{prefix}{idx.name}")
+        parts.append(f"{prefix}{idx.label}")
     return "{" + " ".join(parts) + "}" if parts else "{}"
 
 

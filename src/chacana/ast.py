@@ -19,7 +19,7 @@ class IndexType(Enum):
 
 @dataclass(frozen=True)
 class ChacanaIndex:
-    name: str
+    label: str
     variance: Variance
     index_type: IndexType = IndexType.LATIN
     is_derivative: bool = False
@@ -27,7 +27,7 @@ class ChacanaIndex:
 
     def to_dict(self) -> dict:
         result = {
-            "name": self.name,
+            "label": self.label,
             "variance": self.variance.value,
             "type": self.index_type.value,
         }
@@ -46,7 +46,7 @@ class ValidationToken:
     metadata: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
-        result: dict = {"head": self.head}
+        result: dict = {"type": "TensorExpression", "head": self.head}
         if self.indices:
             result["indices"] = [idx.to_dict() for idx in self.indices]
         if self.args:

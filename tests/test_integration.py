@@ -11,7 +11,8 @@ class TestEndToEnd:
         result = chacana.parse("R{^a _b _c _d}", context=basic_context)
         assert result["head"] == "R"
         assert len(result["indices"]) == 4
-        assert result["indices"][0] == {"name": "a", "variance": "Contra", "type": "Latin"}
+        assert result["type"] == "TensorExpression"
+        assert result["indices"][0] == {"label": "a", "variance": "Contra", "type": "Latin"}
 
     def test_sum_valid(self, basic_context):
         result = chacana.parse("A{^a} + B{^a}", context=basic_context)
