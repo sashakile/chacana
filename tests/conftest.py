@@ -74,3 +74,18 @@ manifold = "M"
 rank = 2
 index_pattern = ["Covar", "Covar"]
 """)
+
+
+@pytest.fixture
+def symmetric_context() -> GlobalContext:
+    """Context with a tensor declared symmetric in indices [1, 2]."""
+    return load_context("""
+[manifold.M]
+dimension = 4
+
+[tensor.T]
+manifold = "M"
+rank = 2
+index_pattern = ["Covar", "Covar"]
+symmetries = [{indices = [1, 2], type = "Symmetric"}]
+""")
