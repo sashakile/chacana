@@ -1,0 +1,134 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Chacana",
+  "scopeName": "source.chacana",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#expression" }
+  ],
+  "repository": {
+    "comment": {
+      "match": "#.*$",
+      "name": "comment.line.number-sign.chacana"
+    },
+    "expression": {
+      "patterns": [
+        { "include": "#perturbation" },
+        { "include": "#functional-op" },
+        { "include": "#tensor-with-indices" },
+        { "include": "#scalar" },
+        { "include": "#operator" },
+        { "include": "#brackets" },
+        { "include": "#identifier" }
+      ]
+    },
+    "perturbation": {
+      "match": "(@)(\\d+)",
+      "captures": {
+        "1": { "name": "keyword.operator.perturbation.chacana" },
+        "2": { "name": "constant.numeric.integer.chacana" }
+      }
+    },
+    "functional-op": {
+      "begin": "\\b(d|L|Tr|det|inv|star|hodge|i)\\s*\\(",
+      "beginCaptures": {
+        "1": { "name": "entity.name.function.chacana" }
+      },
+      "end": "\\)",
+      "endCaptures": {
+        "0": { "name": "punctuation.bracket.round.chacana" }
+      },
+      "patterns": [
+        { "include": "#expression" }
+      ]
+    },
+    "tensor-with-indices": {
+      "begin": "\\b([a-zA-Z\\u0370-\\u03FF][a-zA-Z0-9\\u0370-\\u03FF]*)\\s*(\\{)",
+      "beginCaptures": {
+        "1": { "name": "entity.name.type.tensor.chacana" },
+        "2": { "name": "punctuation.bracket.curly.begin.chacana" }
+      },
+      "end": "(\\})",
+      "endCaptures": {
+        "1": { "name": "punctuation.bracket.curly.end.chacana" }
+      },
+      "patterns": [
+        { "include": "#index-block" }
+      ]
+    },
+    "index-block": {
+      "patterns": [
+        { "include": "#symmetrization" },
+        { "include": "#anti-symmetrization" },
+        { "include": "#derivative" },
+        { "include": "#variance-marker" },
+        { "include": "#index-name" }
+      ]
+    },
+    "symmetrization": {
+      "begin": "([\\^_])\\s*(\\()",
+      "beginCaptures": {
+        "1": { "name": "keyword.operator.variance.chacana" },
+        "2": { "name": "punctuation.bracket.round.begin.chacana" }
+      },
+      "end": "([\\^_])?\\s*(\\))",
+      "endCaptures": {
+        "1": { "name": "keyword.operator.variance.chacana" },
+        "2": { "name": "punctuation.bracket.round.end.chacana" }
+      },
+      "patterns": [
+        { "include": "#index-block" }
+      ]
+    },
+    "anti-symmetrization": {
+      "begin": "([\\^_])\\s*(\\[)",
+      "beginCaptures": {
+        "1": { "name": "keyword.operator.variance.chacana" },
+        "2": { "name": "punctuation.bracket.square.begin.chacana" }
+      },
+      "end": "([\\^_])?\\s*(\\])",
+      "endCaptures": {
+        "1": { "name": "keyword.operator.variance.chacana" },
+        "2": { "name": "punctuation.bracket.square.end.chacana" }
+      },
+      "patterns": [
+        { "include": "#index-block" }
+      ]
+    },
+    "derivative": {
+      "match": "([;,])\\s*([a-zA-Z\\u0370-\\u03FF][a-zA-Z0-9\\u0370-\\u03FF]*)",
+      "captures": {
+        "1": { "name": "keyword.operator.derivative.chacana" },
+        "2": { "name": "variable.other.index.chacana" }
+      }
+    },
+    "variance-marker": {
+      "match": "[\\^_]",
+      "name": "keyword.operator.variance.chacana"
+    },
+    "index-name": {
+      "match": "\\b[a-zA-Z\\u0370-\\u03FF][a-zA-Z0-9\\u0370-\\u03FF]*\\b",
+      "name": "variable.other.index.chacana"
+    },
+    "scalar": {
+      "match": "\\b\\d+(\\.\\d+)?\\b",
+      "name": "constant.numeric.chacana"
+    },
+    "operator": {
+      "match": "[+\\-*\\^]",
+      "name": "keyword.operator.arithmetic.chacana"
+    },
+    "brackets": {
+      "patterns": [
+        { "match": "[{}]", "name": "punctuation.bracket.curly.chacana" },
+        { "match": "[()]", "name": "punctuation.bracket.round.chacana" },
+        { "match": "[\\[\\]]", "name": "punctuation.bracket.square.chacana" },
+        { "match": ",", "name": "punctuation.separator.comma.chacana" }
+      ]
+    },
+    "identifier": {
+      "match": "\\b[a-zA-Z\\u0370-\\u03FF][a-zA-Z0-9\\u0370-\\u03FF]*\\b",
+      "name": "entity.name.type.tensor.chacana"
+    }
+  }
+}
