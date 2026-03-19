@@ -38,6 +38,24 @@ if (watch) {
   cpSync("wasm", "dist/wasm", { recursive: true });
   console.log("Watching for changes...");
 } else {
-  await Promise.all([esbuild.build(clientOpts), esbuild.build(serverOpts)]);
+  // Browser bundle for docs playground (IIFE, no Node deps)
+  const browserOpts = {
+    bundle: true,
+    sourcemap: true,
+    minify: true,
+    platform: "browser",
+    target: "es2020",
+    entryPoints: ["src/browser/index.ts"],
+    outfile: "dist/browser/chacana-checker.js",
+    format: "iife",
+    globalName: "ChacanaChecker",
+    logLevel: "info",
+  };
+
+  await Promise.all([
+    esbuild.build(clientOpts),
+    esbuild.build(serverOpts),
+    esbuild.build(browserOpts),
+  ]);
   cpSync("wasm", "dist/wasm", { recursive: true });
 }
