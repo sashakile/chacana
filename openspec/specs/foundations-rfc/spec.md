@@ -28,7 +28,7 @@ The system SHALL support verification across three distinct execution tiers to p
 
 #### Scenario: Verify Tier 3 against Tier 1
 - **GIVEN** a mathematical expression defined in Chacana
-- **WHEN** a result from the Chacana-jl engine (Tier 3) is compared
+- **WHEN** a result from the Tequitl engine (Tier 3) is compared
 - **THEN** it MUST be verified against the Wolfram xAct "Gold Standard" (Tier 1).
 
 #### Scenario: Divergent tier results
@@ -41,17 +41,17 @@ The system SHALL support verification across three distinct execution tiers to p
 ### 1. The Three-Tier Strategy
 - **Tier 1 (Wolfram xAct)**: The Gold Standard.
 - **Tier 2 (xAct-jl)**: Literal Julia port.
-- **Tier 3 (Chacana-jl)**: Idiomatic Julia using `Symbolics.jl`.
+- **Tier 3 (Tequitl)**: Idiomatic Julia processor using `Symbolics.jl`, compilable via juliac. See `openspec/specs/tequitl-architecture/spec.md`.
 
 ### 2. Implementation Roadmap
 - **Phase 1: Eleguá Core**: Generalization of the runner into a domain-agnostic orchestrator.
 - **Phase 2: Chacana-Spec**: Implementation of the standalone DSL and static type system. Includes the Python prototype (`chacana-spec-py`) as the initial verification target.
 - **Phase 3: xAct-jl**: Completion of the literal functional port.
-- **Phase 4: Chacana-jl**: Development of the idiomatic Julia engine.
+- **Phase 4: Tequitl**: Development of the idiomatic Julia processor. Architecture defined in `openspec/specs/tequitl-architecture/spec.md`. Consumes Chacana via the Processor Interface Contract (`openspec/specs/processor-interface/spec.md`).
 
 ### 3. Scientific Impact
 Eleguá and Chacana represent a shift from porting code to verifying mathematics, providing an infrastructure of trust and a machine-parseable notation for physicists. 
-Furthermore, Chacana's explicit separation of notation from numerical evaluation creates the foundational structural metadata required to support native **Geometric Automatic Differentiation (AD)** within the computation layer (Tier 3).
+Furthermore, Chacana's explicit separation of notation from numerical evaluation creates the foundational structural metadata required to support native **Geometric Automatic Differentiation (AD)** within the computation layer (Tequitl, Tier 3). The Processor Interface Contract (`openspec/specs/processor-interface/spec.md`) formalizes the boundary between Chacana (validation) and processors (computation).
 
 ## Data Models
 

@@ -6,7 +6,7 @@ status: DRAFT
 # Specification: Differential Geometry Operations
 
 ## Purpose
-This specification defines advanced differential geometry and algebraic operators in the Chacana DSL, including exterior calculus, Lie derivatives, and tensor field operations. It enables coordinate-free symbolic manipulation and automated verification of complex geometric identities across multiple execution tiers.
+This specification defines advanced differential geometry and algebraic operators in the Chacana DSL, including exterior calculus, Lie derivatives, and tensor field operations. It enables coordinate-free symbolic manipulation and automated verification of complex geometric identities across multiple execution tiers. All operators defined here require Level 1+ processor support as defined in `openspec/specs/processor-interface/spec.md`.
 
 ## Requirements
 

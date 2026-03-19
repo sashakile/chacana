@@ -46,7 +46,7 @@ The DSL SHALL support a declarative TOML-based format for defining manifolds, te
 - **THEN** it MUST return a schema validation error.
 
 ### Requirement: Geometric Automatic Differentiation (AD) Readiness
-The DSL SHALL provide the structural and semantic metadata necessary to support native covariant automatic differentiation across its ecosystem.
+The DSL SHALL provide the structural and semantic metadata necessary to support native covariant automatic differentiation across its ecosystem. The Processor Interface Contract (`openspec/specs/processor-interface/spec.md`) defines how this metadata flows from the GlobalContext to processors via the (ValidationToken, GlobalContext) pair. Level 2 processors expose AD integration surfaces as defined in `openspec/specs/tequitl-architecture/spec.md`.
 
 #### Scenario: Optimize Jacobian via Structural Sparsity
 - **GIVEN** a tensor with declared symmetries
