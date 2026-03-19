@@ -1,0 +1,446 @@
+================================================================================
+Riemann tensor antisymmetry: first pair
+================================================================================
+
+R{_a _b _c _d} + R{_b _a _c _d}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Riemann pair symmetry
+================================================================================
+
+R{_a _b _c _d} - R{_c _d _a _b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+First Bianchi identity pattern
+================================================================================
+
+R{^a _b _c _d} + R{^a _c _d _b} + R{^a _d _b _c}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (sum_expression
+      left: (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier)))))
+      right: (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Metric trace (contraction)
+================================================================================
+
+g{^a ^b} * g{_a _b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (product_expression
+    left: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Index raising via metric
+================================================================================
+
+g{^a ^b} * T{_b _c}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (product_expression
+    left: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Einstein equation structure: Ricci minus half scalar times metric
+================================================================================
+
+R{_a _b} - (1 * R) * g{_a _b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))
+    right: (product_expression
+      left: (paren_expression
+        (product_expression
+          left: (scalar
+            (integer))
+          right: (tensor_expr
+            name: (identifier))))
+      right: (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))))
+
+================================================================================
+Covariant derivative of Riemann (second Bianchi pattern)
+================================================================================
+
+R{^a _b _c _d ;e} + R{^a _b _d _e ;c} + R{^a _b _e _c ;d}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (sum_expression
+      left: (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              name: (derivative
+                name: (identifier))))))
+      right: (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              name: (derivative
+                name: (identifier)))))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            name: (derivative
+              name: (identifier))))))))
+
+================================================================================
+Gauss-Bonnet-like quadratic curvature invariant
+================================================================================
+
+R * R - 4 * R{_a _b} * R{^a ^b} + R{_a _b _c _d} * R{^a ^b ^c ^d}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (sum_expression
+      left: (product_expression
+        left: (tensor_expr
+          name: (identifier))
+        right: (tensor_expr
+          name: (identifier)))
+      right: (product_expression
+        left: (product_expression
+          left: (scalar
+            (integer))
+          right: (tensor_expr
+            name: (identifier)
+            indices: (index_block
+              (index_list
+                (index
+                  variance: (variance_marker)
+                  name: (identifier))
+                (index
+                  variance: (variance_marker)
+                  name: (identifier))))))
+        right: (tensor_expr
+          name: (identifier)
+          indices: (index_block
+            (index_list
+              (index
+                variance: (variance_marker)
+                name: (identifier))
+              (index
+                variance: (variance_marker)
+                name: (identifier)))))))
+    right: (product_expression
+      left: (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier)))))
+      right: (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))))
+
+================================================================================
+Lie derivative of metric (Killing equation form)
+================================================================================
+
+L(X, g{_a _b})
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier))
+      (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))))
+
+================================================================================
+Symmetric tensor contraction
+================================================================================
+
+T{_( a b _)} * S{^a ^b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (product_expression
+    left: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (symmetrization
+            opening_variance: (variance_marker)
+            (index_list
+              (index
+                name: (identifier))
+              (index
+                name: (identifier)))
+            closing_variance: (variance_marker)))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))

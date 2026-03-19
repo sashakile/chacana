@@ -1,0 +1,30 @@
+{
+  "grammars": [
+    {
+      "name": "chacana",
+      "camelcase": "Chacana",
+      "scope": "source.chacana",
+      "path": ".",
+      "file-types": [
+        "chacana"
+      ],
+      "highlights": "queries/highlights.scm",
+      "injection-regex": "chacana",
+      "external-scanner": {
+        "path": "src/scanner.c"
+      }
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "Tree-sitter grammar for Chacana tensor calculus micro-syntax",
+    "links": {
+      "repository": "https://github.com/sk/chacana"
+    }
+  },
+  "bindings": {
+    "c": true,
+    "node": true
+  }
+}

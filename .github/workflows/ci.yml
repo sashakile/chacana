@@ -32,3 +32,17 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --dev
       - run: uv run python -m pytest tests/ -v
+
+  tree-sitter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tree-sitter-chacana
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - run: npx tree-sitter generate
+      - run: npx tree-sitter test

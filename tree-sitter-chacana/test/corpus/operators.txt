@@ -1,0 +1,419 @@
+================================================================================
+Sum expression
+================================================================================
+
+A + B
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (tensor_expr
+      name: (identifier))
+    right: (tensor_expr
+      name: (identifier))))
+
+================================================================================
+Subtraction expression
+================================================================================
+
+A - B
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (tensor_expr
+      name: (identifier))
+    right: (tensor_expr
+      name: (identifier))))
+
+================================================================================
+Product expression
+================================================================================
+
+A * B
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (product_expression
+    left: (tensor_expr
+      name: (identifier))
+    right: (tensor_expr
+      name: (identifier))))
+
+================================================================================
+Wedge product
+================================================================================
+
+A ^ B
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (wedge_expression
+    left: (tensor_expr
+      name: (identifier))
+    right: (tensor_expr
+      name: (identifier))))
+
+================================================================================
+Sum with matching indices
+================================================================================
+
+A{^a} + B{^a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Subtraction with indices
+================================================================================
+
+A{^a} - B{^a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Contraction pair
+================================================================================
+
+A{_a} * B{^a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (product_expression
+    left: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Same-variance product
+================================================================================
+
+A{_a} * B{_a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (product_expression
+    left: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Wedge with indices
+================================================================================
+
+A{_a} ^ B{_b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (wedge_expression
+    left: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Precedence: product binds tighter than sum
+================================================================================
+
+A + B * C
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (tensor_expr
+      name: (identifier))
+    right: (product_expression
+      left: (tensor_expr
+        name: (identifier))
+      right: (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Precedence: wedge binds tighter than product
+================================================================================
+
+A * B ^ C
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (product_expression
+    left: (tensor_expr
+      name: (identifier))
+    right: (wedge_expression
+      left: (tensor_expr
+        name: (identifier))
+      right: (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Left associativity of sum
+================================================================================
+
+A + B + C
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (sum_expression
+      left: (tensor_expr
+        name: (identifier))
+      right: (tensor_expr
+        name: (identifier)))
+    right: (tensor_expr
+      name: (identifier))))
+
+================================================================================
+Mixed addition and subtraction
+================================================================================
+
+A + B - C
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (sum_expression
+      left: (tensor_expr
+        name: (identifier))
+      right: (tensor_expr
+        name: (identifier)))
+    right: (tensor_expr
+      name: (identifier))))
+
+================================================================================
+Scalar multiplication
+================================================================================
+
+2 * T{^a _b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (product_expression
+    left: (scalar
+      (integer))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Scalar times single-index tensor
+================================================================================
+
+3 * T{^a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (product_expression
+    left: (scalar
+      (integer))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Float scalar in expression
+================================================================================
+
+3.14 * T{^a _b} + 2 * R{^a _b _c _d}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (product_expression
+      left: (scalar
+        (float))
+      right: (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))
+    right: (product_expression
+      left: (scalar
+        (integer))
+      right: (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))))
+
+================================================================================
+Nested product in parenthesized sum
+================================================================================
+
+(A{_a} * B{^a}) + C
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (paren_expression
+      (product_expression
+        left: (tensor_expr
+          name: (identifier)
+          indices: (index_block
+            (index_list
+              (index
+                variance: (variance_marker)
+                name: (identifier)))))
+        right: (tensor_expr
+          name: (identifier)
+          indices: (index_block
+            (index_list
+              (index
+                variance: (variance_marker)
+                name: (identifier)))))))
+    right: (tensor_expr
+      name: (identifier))))
+
+================================================================================
+Complex Riemann contraction
+================================================================================
+
+R{^a _b _c _d} * g{^b ^d} + T{^a _c}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (product_expression
+      left: (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier)))))
+      right: (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))

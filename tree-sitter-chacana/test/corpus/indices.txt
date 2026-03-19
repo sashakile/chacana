@@ -1,0 +1,297 @@
+================================================================================
+Symmetrization without closing variance
+================================================================================
+
+T{_( a b )}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (symmetrization
+          opening_variance: (variance_marker)
+          (index_list
+            (index
+              name: (identifier))
+            (index
+              name: (identifier))))))))
+
+================================================================================
+Symmetrization with closing variance
+================================================================================
+
+T{_( a b _)}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (symmetrization
+          opening_variance: (variance_marker)
+          (index_list
+            (index
+              name: (identifier))
+            (index
+              name: (identifier)))
+          closing_variance: (variance_marker))))))
+
+================================================================================
+Anti-symmetrization without closing variance
+================================================================================
+
+T{_[ a b ]}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (anti_symmetrization
+          opening_variance: (variance_marker)
+          (index_list
+            (index
+              name: (identifier))
+            (index
+              name: (identifier))))))))
+
+================================================================================
+Anti-symmetrization with closing variance
+================================================================================
+
+T{_[ a b _]}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (anti_symmetrization
+          opening_variance: (variance_marker)
+          (index_list
+            (index
+              name: (identifier))
+            (index
+              name: (identifier)))
+          closing_variance: (variance_marker))))))
+
+================================================================================
+Contravariant symmetrization
+================================================================================
+
+T{^( a b ^)}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (symmetrization
+          opening_variance: (variance_marker)
+          (index_list
+            (index
+              name: (identifier))
+            (index
+              name: (identifier)))
+          closing_variance: (variance_marker))))))
+
+================================================================================
+Contravariant anti-symmetrization
+================================================================================
+
+T{^[ a b ^]}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (anti_symmetrization
+          opening_variance: (variance_marker)
+          (index_list
+            (index
+              name: (identifier))
+            (index
+              name: (identifier)))
+          closing_variance: (variance_marker))))))
+
+================================================================================
+Mixed plain index and symmetrization
+================================================================================
+
+T{^c _( a b _)}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (symmetrization
+          opening_variance: (variance_marker)
+          (index_list
+            (index
+              name: (identifier))
+            (index
+              name: (identifier)))
+          closing_variance: (variance_marker))))))
+
+================================================================================
+Covariant derivative
+================================================================================
+
+T{^a ;b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          name: (derivative
+            name: (identifier)))))))
+
+================================================================================
+Comma derivative
+================================================================================
+
+T{^a ,b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          name: (derivative
+            name: (identifier)))))))
+
+================================================================================
+Mixed derivatives: semicolon and comma
+================================================================================
+
+T{;a ,b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          name: (derivative
+            name: (identifier)))
+        (index
+          name: (derivative
+            name: (identifier)))))))
+
+================================================================================
+Mixed indices with derivative
+================================================================================
+
+R{^a _b _c ;d}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          name: (derivative
+            name: (identifier)))))))
+
+================================================================================
+Indices plus covariant derivative
+================================================================================
+
+T{^a _b ;c}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          name: (derivative
+            name: (identifier)))))))
+
+================================================================================
+Standalone semicolon derivative
+================================================================================
+
+T{;a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          name: (derivative
+            name: (identifier)))))))
+
+================================================================================
+Standalone comma derivative
+================================================================================
+
+T{,a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          name: (derivative
+            name: (identifier)))))))

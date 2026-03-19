@@ -1,0 +1,169 @@
+================================================================================
+Perturbation order 1
+================================================================================
+
+@1(g{_a _b})
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (perturbation
+    order: (integer)
+    body: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Perturbation order 2
+================================================================================
+
+@2(R{^a _b _c _d})
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (perturbation
+    order: (integer)
+    body: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Perturbation of sum expression
+================================================================================
+
+@2(A + B)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (perturbation
+    order: (integer)
+    body: (sum_expression
+      left: (tensor_expr
+        name: (identifier))
+      right: (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Perturbation of bare tensor
+================================================================================
+
+@2(A)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (perturbation
+    order: (integer)
+    body: (tensor_expr
+      name: (identifier))))
+
+================================================================================
+Higher order perturbation
+================================================================================
+
+@3(g{_a _b})
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (perturbation
+    order: (integer)
+    body: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Commutator
+================================================================================
+
+[A, B]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (commutator
+    left: (tensor_expr
+      name: (identifier))
+    right: (tensor_expr
+      name: (identifier))))
+
+================================================================================
+Commutator with tensor indices
+================================================================================
+
+[T{^a _b}, S{^b _c}]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (commutator
+    left: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))
+    right: (tensor_expr
+      name: (identifier)
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Commutator with complex expressions
+================================================================================
+
+[A + B, C * D]
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (commutator
+    left: (sum_expression
+      left: (tensor_expr
+        name: (identifier))
+      right: (tensor_expr
+        name: (identifier)))
+    right: (product_expression
+      left: (tensor_expr
+        name: (identifier))
+      right: (tensor_expr
+        name: (identifier)))))

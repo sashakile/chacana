@@ -1,0 +1,277 @@
+================================================================================
+Bare identifier
+================================================================================
+
+R
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)))
+
+================================================================================
+Tensor with four indices
+================================================================================
+
+R{^a _b _c _d}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier))))))
+
+================================================================================
+Tensor with mixed indices
+================================================================================
+
+T{^a _b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier))))))
+
+================================================================================
+Integer scalar
+================================================================================
+
+42
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (scalar
+    (integer)))
+
+================================================================================
+Float scalar
+================================================================================
+
+3.14
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (scalar
+    (float)))
+
+================================================================================
+Parenthesized expression
+================================================================================
+
+(A + B)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (paren_expression
+    (sum_expression
+      left: (tensor_expr
+        name: (identifier))
+      right: (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Greek identifier
+================================================================================
+
+Γ{^α _β _γ}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier))))))
+
+================================================================================
+Single Greek index
+================================================================================
+
+T{^α}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))))))
+
+================================================================================
+Greek tensor with Greek indices
+================================================================================
+
+T{^α _β}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier))))))
+
+================================================================================
+Bare index without variance marker
+================================================================================
+
+T{a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          name: (identifier))))))
+
+================================================================================
+Multiple bare indices without variance
+================================================================================
+
+T{a b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          name: (identifier))
+        (index
+          name: (identifier))))))
+
+================================================================================
+Deeply nested parentheses
+================================================================================
+
+((A + B) * C)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (paren_expression
+    (product_expression
+      left: (paren_expression
+        (sum_expression
+          left: (tensor_expr
+            name: (identifier))
+          right: (tensor_expr
+            name: (identifier))))
+      right: (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Multi-character identifier
+================================================================================
+
+omega
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)))
+
+================================================================================
+Covariant metric tensor
+================================================================================
+
+g{_a _b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier))))))
+
+================================================================================
+Single contravariant index
+================================================================================
+
+A{^a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))))))
+
+================================================================================
+Single covariant index
+================================================================================
+
+A{_a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))))))

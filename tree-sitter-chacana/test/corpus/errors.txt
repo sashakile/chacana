@@ -1,0 +1,104 @@
+================================================================================
+ERROR: Empty braces
+================================================================================
+
+R{}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          name: (MISSING identifier))))))
+
+================================================================================
+ERROR: Trailing operator
+================================================================================
+
+A +
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (tensor_expr
+      name: (identifier))
+    right: (scalar
+      (MISSING float))))
+
+================================================================================
+ERROR: Malformed operator missing operand
+================================================================================
+
+d(A ^ )
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier)))
+    (ERROR)))
+
+================================================================================
+ERROR: Unclosed brace
+================================================================================
+
+T{^a _b
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier)))
+      (MISSING "}"))))
+
+================================================================================
+ERROR: Invalid variance marker
+================================================================================
+
+R{?a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (ERROR
+        (UNEXPECTED '?'))
+      (index_list
+        (index
+          name: (identifier))))))
+
+================================================================================
+ERROR: Double variance marker
+================================================================================
+
+T{^^a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (tensor_expr
+    name: (identifier)
+    indices: (index_block
+      (ERROR
+        (variance_marker))
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))))))

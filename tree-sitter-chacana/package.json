@@ -1,0 +1,50 @@
+{
+  "name": "tree-sitter-chacana",
+  "version": "0.1.0",
+  "description": "Tree-sitter grammar for Chacana tensor calculus micro-syntax",
+  "license": "MIT",
+  "main": "bindings/node",
+  "keywords": [
+    "tree-sitter",
+    "parser",
+    "chacana",
+    "tensor",
+    "calculus"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sk/chacana"
+  },
+  "files": [
+    "grammar.js",
+    "binding.gyp",
+    "prebuilds/**",
+    "bindings/node/*",
+    "queries/*",
+    "src/**",
+    "*.wasm"
+  ],
+  "dependencies": {
+    "node-addon-api": "^8.3.1",
+    "node-gyp-build": "^4.8.4"
+  },
+  "devDependencies": {
+    "tree-sitter-cli": "^0.25.0"
+  },
+  "scripts": {
+    "build": "tree-sitter generate && node-gyp build",
+    "generate": "tree-sitter generate",
+    "test": "tree-sitter test",
+    "parse": "tree-sitter parse"
+  },
+  "tree-sitter": [
+    {
+      "scope": "source.chacana",
+      "file-types": [
+        "chacana"
+      ],
+      "highlights": "queries/highlights.scm",
+      "injection-regex": "chacana"
+    }
+  ]
+}

@@ -1,0 +1,435 @@
+================================================================================
+Exterior derivative
+================================================================================
+
+d(omega)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Exterior derivative with index attachment
+================================================================================
+
+d(omega){_a _b}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier)))
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))
+        (index
+          variance: (variance_marker)
+          name: (identifier))))))
+
+================================================================================
+Exterior derivative of wedge product
+================================================================================
+
+d(A ^ B)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (wedge_expression
+        left: (tensor_expr
+          name: (identifier))
+        right: (tensor_expr
+          name: (identifier))))))
+
+================================================================================
+Empty functional operator
+================================================================================
+
+d()
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)))
+
+================================================================================
+Lie derivative with two arguments
+================================================================================
+
+L(X, T{^a _b})
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier))
+      (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))))
+
+================================================================================
+Lie derivative of bare tensor
+================================================================================
+
+L(X, T)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier))
+      (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Lie derivative of metric with explicit indices
+================================================================================
+
+L(X, g{_a _b})
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier))
+      (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))))
+
+================================================================================
+Lie derivative of metric bare
+================================================================================
+
+L(X, g)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier))
+      (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Trace
+================================================================================
+
+Tr(T)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Trace with explicit indices
+================================================================================
+
+Tr(T{^a _b})
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))))
+
+================================================================================
+Determinant
+================================================================================
+
+det(g)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Determinant with explicit indices
+================================================================================
+
+det(g{_a _b})
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))))
+
+================================================================================
+Inverse
+================================================================================
+
+inv(M)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Inverse with explicit indices
+================================================================================
+
+inv(g{_a _b})
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))))
+
+================================================================================
+Hodge star
+================================================================================
+
+star(F)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Hodge star alternate name
+================================================================================
+
+hodge(omega)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Interior product
+================================================================================
+
+i(X, omega)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier))
+      (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Nested functional operator
+================================================================================
+
+d(d(A))
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (functional_op
+        name: (identifier)
+        arguments: (argument_list
+          (tensor_expr
+            name: (identifier)))))))
+
+================================================================================
+Complex composite: exterior derivative and Lie derivative sum with indices
+================================================================================
+
+d(A ^ B){_a _b _c} + L(X, T){_a _b _c}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (sum_expression
+    left: (functional_op
+      name: (identifier)
+      arguments: (argument_list
+        (wedge_expression
+          left: (tensor_expr
+            name: (identifier))
+          right: (tensor_expr
+            name: (identifier))))
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))
+    right: (functional_op
+      name: (identifier)
+      arguments: (argument_list
+        (tensor_expr
+          name: (identifier))
+        (tensor_expr
+          name: (identifier)))
+      indices: (index_block
+        (index_list
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier))
+          (index
+            variance: (variance_marker)
+            name: (identifier)))))))
+
+================================================================================
+Trace of scalar — parses, fails type check
+================================================================================
+
+Tr(f)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Interior product with scalar — parses, fails type check
+================================================================================
+
+i(X, f)
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier))
+      (tensor_expr
+        name: (identifier)))))
+
+================================================================================
+Lie derivative with form first arg — parses, fails type check
+================================================================================
+
+L(omega, T{^a _b})
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (functional_op
+    name: (identifier)
+    arguments: (argument_list
+      (tensor_expr
+        name: (identifier))
+      (tensor_expr
+        name: (identifier)
+        indices: (index_block
+          (index_list
+            (index
+              variance: (variance_marker)
+              name: (identifier))
+            (index
+              variance: (variance_marker)
+              name: (identifier))))))))
