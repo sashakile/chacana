@@ -39,6 +39,7 @@ nav:
       - TOML Context: guide/context.md
       - Type Checking: guide/type-checking.md
       - Differential Geometry: guide/diffgeom.md
+      - Editor Support: guide/editor-support.md
   - API Reference:
       - chacana: api/index.md
       - chacana.ast: api/ast.md
