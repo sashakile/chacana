@@ -1,7 +1,7 @@
 ---
 change-id: CHG-2026-03-17-004
-version: 0.1.0
-status: DRAFT
+version: 1.0.0
+status: STABLE
 ---
 # Specification: Chacana PEG Grammar
 
@@ -18,8 +18,12 @@ The PEG grammar SHALL provide a deterministic way to parse tensor expressions in
 - **THEN** it MUST produce a JSON AST representing a tensor `R` with four specified indices.
 
 #### Scenario: Parse functional operators
-- **WHEN** the string `d(A ^ B)`, `L(X, T{^a _b})`, `Tr(T)`, `det(g)`, or `inv(M)` is parsed
+- **WHEN** the string `d(A ^ B)`, `L(X, T{^a _b})`, `Tr(T)`, `det(g)`, `inv(M)`, `star(F)`, `hodge(F)`, or `i(X, omega)` is parsed
 - **THEN** it MUST produce a JSON AST representing the corresponding mathematical operator.
+
+#### Scenario: Parse functional operator with index attachment
+- **WHEN** the string `d(omega){_a _b}` is parsed
+- **THEN** it MUST produce a JSON AST representing the exterior derivative of `omega` with covariant indices `a` and `b` attached to the result.
 
 #### Scenario: Reject malformed operator syntax
 - **WHEN** the string `d(A ^ )` is parsed (missing operand)
@@ -77,41 +81,38 @@ Defines basic patterns for identifiers, integers, floats, and whitespace.
 ### 2. Grammar Rules (PEG Production Rules)
 
 ```peg
-# Chacana PEG Grammar v0.2.4
+# Chacana PEG Grammar v1.0.0
 
-expression = sum
+expression = sum EOF
 sum        = product ( (PLUS / MINUS) product )*
 product    = wedge ( STAR wedge )*
 wedge      = factor ( WEDGE factor )*
 
-factor     = functional_op
-           / tensor_expr 
-           / scalar 
-           / perturbation 
-           / commutator 
-           / LPAREN expression RPAREN
+factor     = functional_op (LBRACE index_list RBRACE)?
+           / tensor_expr
+           / scalar
+           / perturbation
+           / commutator
+           / LPAREN sum RPAREN
 
 tensor_expr = identifier (LBRACE index_list RBRACE)?
-index_list  = (symmetrization / anti_symmetrization / index) (whitespace (symmetrization / anti_symmetrization / index))*
+index_list  = (symmetrization / anti_symmetrization / index)+
 
-symmetrization      = COVAR LPAREN index_list RPAREN 
-                    / CONTRA LPAREN index_list RPAREN
-anti_symmetrization = COVAR LBRACK index_list RBRACK 
-                    / CONTRA LBRACK index_list RBRACK
+symmetrization      = variance LPAREN index_list variance? RPAREN
+anti_symmetrization = variance LBRACK index_list variance? RBRACK
 
-index       = variance? (identifier / derivative)
+index       = variance? (derivative / identifier)
 variance    = CONTRA / COVAR
 derivative  = (SEMICOLON / COMMA) identifier
 
-functional_op = identifier LPAREN (expression (COMMA expression)*)? RPAREN
+functional_op = identifier LPAREN (sum (COMMA sum)*)? RPAREN
 
-perturbation = AT integer LPAREN expression RPAREN
-commutator   = LBRACK expression COMMA expression RBRACK
+perturbation = AT integer LPAREN sum RPAREN
+commutator   = LBRACK sum COMMA sum RBRACK
 
 identifier  = [a-zA-Z\u0370-\u03FF][a-zA-Z0-9\u0370-\u03FF]*
 integer     = [0-9]+
-scalar      = float / integer
-float       = [0-9]+ "." [0-9]+
+scalar      = [0-9]+ ("." [0-9]+)?
 
 PLUS      = "+"
 MINUS     = "-"
@@ -128,7 +129,6 @@ CONTRA    = "^"
 COVAR     = "_"
 SEMICOLON = ";"
 COMMA     = ","
-whitespace = [ \t\n\r]+
 ```
 
 ### 3. Operator Precedence

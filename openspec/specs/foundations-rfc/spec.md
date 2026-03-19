@@ -1,7 +1,7 @@
 ---
 change-id: CHG-2026-03-17-001
-version: 0.1.0
-status: DRAFT
+version: 1.0.0
+status: STABLE
 ---
 # Specification: Eleguá and Chacana Foundations RFC
 
