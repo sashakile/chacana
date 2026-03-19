@@ -12,6 +12,7 @@ symmetry, and differential geometry operator constraints.
 - **TOML Context** -- declare manifolds, tensors, metrics, and strategies
 - **Differential Geometry** -- type-checked exterior derivatives, Lie derivatives, Hodge star, trace, determinant, inverse
 - **Unicode Support** -- Greek indices with NFC normalization and visual spoofing rejection
+- **Tree-sitter Grammar** -- incremental parsing, syntax highlighting, and real-time validation queries for IDE integration ([try the playground](playground.md))
 
 ## Quick Example
 

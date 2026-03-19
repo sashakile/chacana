@@ -47,6 +47,7 @@ nav:
       - chacana.checker: api/checker.md
       - chacana.visitor: api/visitor.md
       - chacana.errors: api/errors.md
+  - Playground: playground.md
   - Development: development.md
 
 markdown_extensions:

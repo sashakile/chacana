@@ -67,6 +67,17 @@ ruff check src/ tests/
 ruff format src/ tests/
 ```
 
+## Editor Support
+
+A [Tree-sitter grammar](tree-sitter-chacana/) is included for IDE integration:
+
+- **Syntax highlighting** via `queries/highlights.scm`
+- **Real-time validation** via `queries/validation.scm` (index extraction, variance consistency, derivative identification)
+- **TOML injection** via `contrib/toml-injections.scm` for Chacana expressions inside TOML context files
+- **WASM build** for browser-based parsing (8 KB)
+
+Try the [online playground](https://sashakile.github.io/chacana/playground/) to see the parser in action.
+
 ## Specification
 
 The formal grammar and type system specifications live in the
