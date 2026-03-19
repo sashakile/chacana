@@ -13,6 +13,7 @@ symmetry, and differential geometry operator constraints.
 - **Differential Geometry** -- type-checked exterior derivatives, Lie derivatives, Hodge star, trace, determinant, inverse
 - **Unicode Support** -- Greek indices with NFC normalization and visual spoofing rejection
 - **Tree-sitter Grammar** -- incremental parsing, syntax highlighting, and real-time validation queries for IDE integration ([try the playground](playground.md))
+- **`.chcn` file extension** -- canonical extension for Chacana expression files
 
 ## Quick Example
 

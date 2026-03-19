@@ -75,6 +75,7 @@ A [Tree-sitter grammar](tree-sitter-chacana/) is included for IDE integration:
 - **Real-time validation** via `queries/validation.scm` (index extraction, variance consistency, derivative identification)
 - **TOML injection** via `contrib/toml-injections.scm` for Chacana expressions inside TOML context files
 - **WASM build** for browser-based parsing (8 KB)
+- File extension: `.chcn`
 
 Try the [online playground](https://sashakile.github.io/chacana/playground/) to see the parser in action.
 

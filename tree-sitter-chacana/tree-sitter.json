@@ -6,7 +6,7 @@
       "scope": "source.chacana",
       "path": ".",
       "file-types": [
-        "chacana"
+        "chcn"
       ],
       "highlights": "queries/highlights.scm",
       "injection-regex": "chacana",

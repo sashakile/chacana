@@ -41,7 +41,7 @@
     {
       "scope": "source.chacana",
       "file-types": [
-        "chacana"
+        "chcn"
       ],
       "highlights": "queries/highlights.scm",
       "injection-regex": "chacana"
