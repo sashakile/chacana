@@ -175,29 +175,36 @@ def _check_symmetry(token: ValidationToken, ctx: GlobalContext | None) -> None:
         _check_symmetry_single(t, ctx)
 
 
+def _validate_symmetry_group(
+    indices: list[ChacanaIndex], positions: list[int], label: str
+) -> None:
+    """Check that indices at the given positions have matching variance and type."""
+    if len(positions) < 2:
+        return
+    ref = indices[positions[0]]
+    for pos in positions[1:]:
+        other = indices[pos]
+        if ref.variance != other.variance:
+            raise ChacanaTypeError(
+                f"Variance mismatch in {label}: index "
+                f"'{ref.label}' ({ref.variance.value}) vs "
+                f"'{other.label}' ({other.variance.value})"
+            )
+        if ref.index_type != other.index_type:
+            raise ChacanaTypeError(
+                f"Index type mismatch in {label}: index "
+                f"'{ref.label}' ({ref.index_type.value}) vs "
+                f"'{other.label}' ({other.index_type.value})"
+            )
+
+
 def _check_symmetry_single(token: ValidationToken, ctx: GlobalContext | None) -> None:
     for kind, groups in (
         ("symmetrization", token.metadata.symmetrized_groups),
         ("anti-symmetrization", token.metadata.antisymmetrized_groups),
     ):
         for group in groups:
-            if len(group) < 2:
-                continue
-            ref_idx = token.indices[group[0]]
-            for pos in group[1:]:
-                other_idx = token.indices[pos]
-                if ref_idx.variance != other_idx.variance:
-                    raise ChacanaTypeError(
-                        f"Variance mismatch in {kind}: index "
-                        f"'{ref_idx.label}' ({ref_idx.variance.value}) vs "
-                        f"'{other_idx.label}' ({other_idx.variance.value})"
-                    )
-                if ref_idx.index_type != other_idx.index_type:
-                    raise ChacanaTypeError(
-                        f"Index type mismatch in {kind}: index "
-                        f"'{ref_idx.label}' ({ref_idx.index_type.value}) vs "
-                        f"'{other_idx.label}' ({other_idx.index_type.value})"
-                    )
+            _validate_symmetry_group(token.indices, group, kind)
 
     if ctx is not None:
         decl = ctx.tensors.get(token.head)
@@ -205,23 +212,11 @@ def _check_symmetry_single(token: ValidationToken, ctx: GlobalContext | None) ->
             for sym in decl.symmetries:
                 positions = [i - 1 for i in sym.indices]
                 if all(0 <= p < len(token.indices) for p in positions):
-                    ref_idx = token.indices[positions[0]]
-                    for pos in positions[1:]:
-                        other_idx = token.indices[pos]
-                        if ref_idx.variance != other_idx.variance:
-                            raise ChacanaTypeError(
-                                f"Variance mismatch in declared symmetry of "
-                                f"'{token.head}': slot {positions[0] + 1} "
-                                f"({ref_idx.variance.value}) vs slot {pos + 1} "
-                                f"({other_idx.variance.value})"
-                            )
-                        if ref_idx.index_type != other_idx.index_type:
-                            raise ChacanaTypeError(
-                                f"Index type mismatch in declared symmetry of "
-                                f"'{token.head}': slot {positions[0] + 1} "
-                                f"({ref_idx.index_type.value}) vs slot {pos + 1} "
-                                f"({other_idx.index_type.value})"
-                            )
+                    _validate_symmetry_group(
+                        token.indices,
+                        positions,
+                        f"declared symmetry of '{token.head}'",
+                    )
 
 
 _STRUCTURAL_HEADS = frozenset({HEAD_ADD, HEAD_MULTIPLY, HEAD_WEDGE, HEAD_NEGATE, HEAD_NUMBER})

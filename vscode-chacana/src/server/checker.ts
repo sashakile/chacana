@@ -238,6 +238,34 @@ function checkSymmetry(
   }
 }
 
+function validateSymmetryGroup(
+  indices: ChacanaIndex[],
+  positions: number[],
+  label: string,
+  range: SourceRange | null,
+  diags: CheckerDiagnostic[],
+): void {
+  if (positions.length < 2) return;
+  const ref = indices[positions[0]];
+  for (let p = 1; p < positions.length; p++) {
+    const other = indices[positions[p]];
+    if (ref.variance !== other.variance) {
+      diags.push({
+        message: `Variance mismatch in ${label}: index '${ref.label}' (${ref.variance}) vs '${other.label}' (${other.variance})`,
+        range,
+        code: "chacana/symmetry",
+      });
+    }
+    if (ref.indexType !== other.indexType) {
+      diags.push({
+        message: `Index type mismatch in ${label}: index '${ref.label}' (${ref.indexType}) vs '${other.label}' (${other.indexType})`,
+        range,
+        code: "chacana/symmetry",
+      });
+    }
+  }
+}
+
 function checkSymmetrySingle(
   token: ValidationToken,
   ctx: GlobalContext | null,
@@ -248,25 +276,7 @@ function checkSymmetrySingle(
     ["anti-symmetrization", token.metadata.antisymmetrized_groups],
   ] as const) {
     for (const group of groups) {
-      if (group.length < 2) continue;
-      const ref = token.indices[group[0]];
-      for (let p = 1; p < group.length; p++) {
-        const other = token.indices[group[p]];
-        if (ref.variance !== other.variance) {
-          diags.push({
-            message: `Variance mismatch in ${kind}: index '${ref.label}' (${ref.variance}) vs '${other.label}' (${other.variance})`,
-            range: token.range,
-            code: "chacana/symmetry",
-          });
-        }
-        if (ref.indexType !== other.indexType) {
-          diags.push({
-            message: `Index type mismatch in ${kind}: index '${ref.label}' (${ref.indexType}) vs '${other.label}' (${other.indexType})`,
-            range: token.range,
-            code: "chacana/symmetry",
-          });
-        }
-      }
+      validateSymmetryGroup(token.indices, group, kind, token.range, diags);
     }
   }
 
@@ -276,17 +286,13 @@ function checkSymmetrySingle(
       for (const sym of decl.symmetries) {
         const positions = sym.indices.map((i) => i - 1);
         if (positions.every((p) => p >= 0 && p < token.indices.length)) {
-          const ref = token.indices[positions[0]];
-          for (let pi = 1; pi < positions.length; pi++) {
-            const other = token.indices[positions[pi]];
-            if (ref.variance !== other.variance) {
-              diags.push({
-                message: `Variance mismatch in declared symmetry of '${token.head}': slot ${positions[0] + 1} (${ref.variance}) vs slot ${positions[pi] + 1} (${other.variance})`,
-                range: token.range,
-                code: "chacana/symmetry",
-              });
-            }
-          }
+          validateSymmetryGroup(
+            token.indices,
+            positions,
+            `declared symmetry of '${token.head}'`,
+            token.range,
+            diags,
+          );
         }
       }
     }
