@@ -428,7 +428,7 @@ T{_( a b _)} * S{^a ^b}
         (index_list
           (symmetrization
             opening_variance: (variance_marker)
-            (index_list
+            (sym_index_list
               (index
                 name: (identifier))
               (index

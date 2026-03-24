@@ -33,7 +33,7 @@
   opening_variance: (variance_marker) @sym.opening_variance)
 
 (symmetrization
-  (index_list
+  (sym_index_list
     (index
       variance: (variance_marker) @sym.index_variance)))
 
@@ -41,7 +41,7 @@
   opening_variance: (variance_marker) @antisym.opening_variance)
 
 (anti_symmetrization
-  (index_list
+  (sym_index_list
     (index
       variance: (variance_marker) @antisym.index_variance)))
 

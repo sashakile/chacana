@@ -214,7 +214,7 @@ interface IndexListResult {
 }
 
 function buildIndexList(indexListNode: SyntaxNode): IndexListResult {
-  if (!indexListNode || indexListNode.type !== "index_list") {
+  if (!indexListNode || (indexListNode.type !== "index_list" && indexListNode.type !== "sym_index_list")) {
     return { indices: [], metadata: emptyMetadata() };
   }
 
@@ -226,7 +226,7 @@ function buildIndexList(indexListNode: SyntaxNode): IndexListResult {
     if (child.type === "index") {
       flatIndices.push(buildSingleIndex(child));
     } else if (child.type === "symmetrization" || child.type === "anti_symmetrization") {
-      const innerList = child.namedChildren.find((c) => c.type === "index_list");
+      const innerList = child.namedChildren.find((c) => c.type === "index_list" || c.type === "sym_index_list");
       if (innerList) {
         const start = flatIndices.length;
         const innerResult = buildIndexList(innerList);

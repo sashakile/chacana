@@ -102,12 +102,12 @@ module.exports = grammar({
     ),
 
     // Explicit symmetrization: _( a b _)
-    // The optional closing variance uses an external scanner that
-    // peeks ahead for ')' or ']' to avoid ambiguity with new indices.
+    // Uses sym_index_list (indices only, no nesting) to structurally
+    // reject nested symmetrization like _( _( a b _) _).
     symmetrization: $ => seq(
       field('opening_variance', $.variance_marker),
       '(',
-      $.index_list,
+      $.sym_index_list,
       optional(field('closing_variance',
         alias($._closing_variance, $.variance_marker))),
       ')',
@@ -117,11 +117,14 @@ module.exports = grammar({
     anti_symmetrization: $ => seq(
       field('opening_variance', $.variance_marker),
       '[',
-      $.index_list,
+      $.sym_index_list,
       optional(field('closing_variance',
         alias($._closing_variance, $.variance_marker))),
       ']',
     ),
+
+    // Index list inside symmetrization — only plain indices, no nesting
+    sym_index_list: $ => repeat1($.index),
 
     // Single index with optional variance marker
     index: $ => seq(
