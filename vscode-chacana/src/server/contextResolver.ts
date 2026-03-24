@@ -6,19 +6,24 @@
  *   2. `chacana.toml` in the same directory, then parent directories
  */
 
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, statSync } from "fs";
 import { dirname, resolve, join } from "path";
 import { URI } from "vscode-uri";
 import { loadContext, type GlobalContext } from "./context.js";
 
-interface ResolvedContext {
+export interface ResolvedContext {
   ctx: GlobalContext;
   tomlPath: string;
   /** Map of tensor name -> line number in the TOML file (0-based) */
   tensorLines: Map<string, number>;
 }
 
-const cache = new Map<string, ResolvedContext>();
+interface CacheEntry {
+  resolved: ResolvedContext;
+  mtimeMs: number;
+}
+
+const cache = new Map<string, CacheEntry>();
 
 const CONTEXT_DIRECTIVE_RE = /^#\s*context:\s*(.+)$/;
 
@@ -88,16 +93,22 @@ export function resolveContext(
 
   if (!tomlPath || !existsSync(tomlPath)) return null;
 
-  // Check cache
+  // Check cache — validate mtime to catch out-of-workspace edits
+  let mtimeMs: number;
+  try {
+    mtimeMs = statSync(tomlPath).mtimeMs;
+  } catch {
+    return null;
+  }
   const cached = cache.get(tomlPath);
-  if (cached) return cached;
+  if (cached && cached.mtimeMs === mtimeMs) return cached.resolved;
 
   try {
     const tomlText = readFileSync(tomlPath, "utf-8");
     const ctx = loadContext(tomlText);
     const tensorLines = extractTensorLines(tomlText);
     const resolved: ResolvedContext = { ctx, tomlPath, tensorLines };
-    cache.set(tomlPath, resolved);
+    cache.set(tomlPath, { resolved, mtimeMs });
     return resolved;
   } catch {
     return null;
