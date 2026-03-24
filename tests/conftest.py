@@ -89,3 +89,92 @@ rank = 2
 index_pattern = ["Covar", "Covar"]
 symmetries = [{indices = [1, 2], type = "Symmetric"}]
 """)
+
+
+@pytest.fixture
+def diffgeom_context() -> GlobalContext:
+    """Manifold M with vector X, 1-form omega, scalar f, metric g, mixed T."""
+    return load_context("""
+[strategy]
+active_metric = "g"
+
+[manifold.M]
+dimension = 4
+
+[tensor.X]
+manifold = "M"
+rank = 1
+index_pattern = ["Contra"]
+
+[tensor.omega]
+manifold = "M"
+rank = 1
+index_pattern = ["Covar"]
+
+[tensor.f]
+manifold = "M"
+rank = 0
+
+[tensor.g]
+manifold = "M"
+rank = 2
+index_pattern = ["Covar", "Covar"]
+
+[tensor.T]
+manifold = "M"
+rank = 2
+index_pattern = ["Contra", "Covar"]
+
+[tensor.S]
+manifold = "M"
+rank = 3
+index_pattern = ["Covar", "Covar", "Covar"]
+
+[tensor.A]
+manifold = "M"
+rank = 1
+index_pattern = ["Covar"]
+
+[tensor.B]
+manifold = "M"
+rank = 1
+index_pattern = ["Covar"]
+""")
+
+
+@pytest.fixture
+def no_metric_context() -> GlobalContext:
+    """Same tensors but WITHOUT active_metric."""
+    return load_context("""
+[manifold.M]
+dimension = 4
+
+[tensor.X]
+manifold = "M"
+rank = 1
+index_pattern = ["Contra"]
+
+[tensor.omega]
+manifold = "M"
+rank = 1
+index_pattern = ["Covar"]
+
+[tensor.f]
+manifold = "M"
+rank = 0
+
+[tensor.g]
+manifold = "M"
+rank = 2
+index_pattern = ["Covar", "Covar"]
+
+[tensor.T]
+manifold = "M"
+rank = 2
+index_pattern = ["Contra", "Covar"]
+
+[tensor.S]
+manifold = "M"
+rank = 3
+index_pattern = ["Covar", "Covar", "Covar"]
+""")

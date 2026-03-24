@@ -5,14 +5,7 @@ import pytest
 from chacana.ast import ChacanaIndex, IndexType, TokenMetadata, ValidationToken, Variance
 from chacana.checker import check
 from chacana.errors import ChacanaTypeError
-from chacana.grammar import create_parser
-from chacana.visitor import parse_to_ast
-
-
-def _make_token(expr: str) -> ValidationToken:
-    parser = create_parser()
-    tree = parser.parse(expr)
-    return parse_to_ast(tree)
+from tests.helpers import make_token as _make_token
 
 
 class TestContraction:
