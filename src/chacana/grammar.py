@@ -19,7 +19,7 @@ from arpeggio import (
 from chacana.errors import ChacanaParseError
 
 # Characters allowed in identifiers beyond ASCII and standard operators.
-# Latin letters, digits, Greek block (U+0370-03FF), and combining diacritical
+# Latin letters, digits, Greek letters (Α-Ω, α-ω), and combining diacritical
 # marks (U+0300-036F) are accepted. Everything else that is a letter/mark
 # outside these ranges is rejected.
 _DISALLOWED_UNICODE_RE = re.compile(
@@ -35,14 +35,16 @@ _DISALLOWED_UNICODE_RE = re.compile(
 )
 
 # More precise: after NFC normalization, every "letter-like" character in
-# the input must be Latin (A-Z, a-z), Greek (U+0370-03FF), a combining
+# the input must be Latin (A-Z, a-z), Greek (Α-Ω, α-ω), a combining
 # mark (U+0300-036F), or a digit.  This allowlist approach is safer than
 # a blocklist.
 _ALLOWED_LETTER_RE = re.compile(
     r"^[a-zA-Z0-9"
     r"\u00C0-\u024F"  # Latin Extended (Latin-1 Supplement + Extended-A + Extended-B)
     r"\u0300-\u036F"  # combining diacritical marks
-    r"\u0370-\u03FF"  # Greek and Coptic
+    r"\u0386\u0388-\u038A\u038C\u038E-\u038F"  # Greek accented uppercase
+    r"\u0391-\u03A1\u03A3-\u03A9"  # Greek uppercase
+    r"\u03AC-\u03CE"  # Greek lowercase + accented (NFC forms)
     r"\u1E00-\u1EFF"  # Latin Extended Additional (precomposed with diacritics)
     r"\s"  # whitespace
     r"\+\-\*/\^"  # arithmetic operators
@@ -94,7 +96,9 @@ def normalize_input(expr: str) -> str:
         # Find the offending character
         for i, ch in enumerate(normalized):
             if not re.match(
-                r"[a-zA-Z0-9\u00C0-\u024F\u0300-\u036F\u0370-\u03FF"
+                r"[a-zA-Z0-9\u00C0-\u024F\u0300-\u036F"
+                r"\u0386\u0388-\u038A\u038C\u038E-\u038F"
+                r"\u0391-\u03A1\u03A3-\u03A9\u03AC-\u03CE"
                 r"\u1E00-\u1EFF\s"
                 r"\+\-\*/\^\{\}\[\]\(\)_;,\.@]",
                 ch,
@@ -267,7 +271,12 @@ def commutator() -> Any:
 
 
 def identifier() -> Any:
-    return RegExMatch(r"[a-zA-Z\u0370-\u03FF][a-zA-Z0-9\u0370-\u03FF]*")
+    return RegExMatch(
+        r"[a-zA-Z\u0386\u0388-\u038A\u038C\u038E-\u038F"
+        r"\u0391-\u03A1\u03A3-\u03A9\u03AC-\u03CE]"
+        r"[a-zA-Z0-9\u0386\u0388-\u038A\u038C\u038E-\u038F"
+        r"\u0391-\u03A1\u03A3-\u03A9\u03AC-\u03CE]*"
+    )
 
 
 def scalar() -> Any:

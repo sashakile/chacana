@@ -163,7 +163,7 @@ module.exports = grammar({
 
     // ── Terminals ──────────────────────────────────────────────────
 
-    // Latin letters (a-z, A-Z) and Greek block (U+0370-03FF)
-    identifier: $ => /[a-zA-Z\u0370-\u03FF][a-zA-Z0-9\u0370-\u03FF]*/,
+    // Latin letters (a-z, A-Z) and Greek (Α-Ρ, Σ-Ω, α-ω)
+    identifier: $ => /[a-zA-Z\u0391-\u03A1\u03A3-\u03A9\u03B1-\u03C9][a-zA-Z0-9\u0391-\u03A1\u03A3-\u03A9\u03B1-\u03C9]*/,
   },
 });

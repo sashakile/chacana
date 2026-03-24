@@ -94,8 +94,8 @@ export const STRUCTURAL_HEADS = new Set([
   HEAD_NUMBER,
 ]);
 
-/** Greek lowercase range for index type detection. */
-const GREEK_RE = /[\u03B1-\u03C9\u0391-\u03A9]/;
+/** Greek letter range for index type detection (Α-Ρ, Σ-Ω, α-ω). */
+const GREEK_RE = /[\u0391-\u03A1\u03A3-\u03A9\u03B1-\u03C9]/;
 
 export function detectIndexType(label: string): IndexType {
   return GREEK_RE.test(label) ? IndexType.Greek : IndexType.Latin;
