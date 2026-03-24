@@ -56,12 +56,19 @@ class ChacanaIndex:
 
 
 @dataclass
+class TokenMetadata:
+    symmetrized_groups: list[list[int]] = field(default_factory=list)
+    antisymmetrized_groups: list[list[int]] = field(default_factory=list)
+    order: int | None = None
+
+
+@dataclass
 class ValidationToken:
     head: str
     indices: list[ChacanaIndex] = field(default_factory=list)
     args: list[ValidationToken] = field(default_factory=list)
     value: float | None = None
-    metadata: dict[str, Any] = field(default_factory=dict)
+    metadata: TokenMetadata = field(default_factory=TokenMetadata)
 
     def to_dict(self) -> dict[str, Any]:
         result: dict[str, Any] = {"type": "TensorExpression", "head": self.head}
@@ -71,6 +78,13 @@ class ValidationToken:
             result["args"] = [arg.to_dict() for arg in self.args]
         if self.value is not None:
             result["value"] = self.value
-        if self.metadata:
-            result["metadata"] = self.metadata
+        meta: dict[str, Any] = {}
+        if self.metadata.symmetrized_groups:
+            meta["symmetrized_groups"] = self.metadata.symmetrized_groups
+        if self.metadata.antisymmetrized_groups:
+            meta["antisymmetrized_groups"] = self.metadata.antisymmetrized_groups
+        if self.metadata.order is not None:
+            meta["order"] = self.metadata.order
+        if meta:
+            result["metadata"] = meta
         return result

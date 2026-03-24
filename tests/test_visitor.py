@@ -106,7 +106,7 @@ class TestVisitorPerturbation:
         assert token.head == "Perturbation"
         assert len(token.args) == 1
         assert token.args[0].head == "A"
-        assert token.metadata == {"order": 2}
+        assert token.metadata.order == 2
 
 
 class TestVisitorCommutator:
@@ -218,21 +218,19 @@ class TestVisitorSymmetrization:
     def test_symmetrization_metadata(self):
         """Symmetrized groups should be recorded in metadata."""
         token = _parse("T{_( a b _)}")
-        assert "symmetrized_groups" in token.metadata
-        assert token.metadata["symmetrized_groups"] == [[0, 1]]
+        assert token.metadata.symmetrized_groups == [[0, 1]]
 
     def test_anti_symmetrization_metadata(self):
         """Anti-symmetrized groups should be recorded in metadata."""
         token = _parse("T{_[ a b _]}")
-        assert "antisymmetrized_groups" in token.metadata
-        assert token.metadata["antisymmetrized_groups"] == [[0, 1]]
+        assert token.metadata.antisymmetrized_groups == [[0, 1]]
 
     def test_mixed_sym_and_plain_indices(self):
         """T{^c _( a b _)} should have sym group at positions [1, 2]."""
         token = _parse("T{^c _( a b _)}")
         assert len(token.indices) == 3
         assert token.indices[0].label == "c"
-        assert token.metadata["symmetrized_groups"] == [[1, 2]]
+        assert token.metadata.symmetrized_groups == [[1, 2]]
 
     def test_bare_index_defaults_to_covariant(self):
         """Bare index without variance marker defaults to covariant."""

@@ -6,10 +6,12 @@
 import type { SyntaxNode } from "./parser.js";
 import {
   type ChacanaIndex,
+  type TokenMetadata,
   type ValidationToken,
   type SourceRange,
   Variance,
   detectIndexType,
+  emptyMetadata,
   makeToken,
   HEAD_ADD,
   HEAD_NEGATE,
@@ -101,14 +103,14 @@ function buildBinaryFlat(
   const args: ValidationToken[] = [];
   for (let i = 0; i < terms.length; i++) {
     if (i > 0 && ops[i - 1] === "-") {
-      args.push(makeToken(HEAD_NEGATE, [terms[i]], [], null, {}, rangeOf(node)));
+      args.push(makeToken(HEAD_NEGATE, [terms[i]], [], null, emptyMetadata(), rangeOf(node)));
     } else {
       args.push(terms[i]);
     }
   }
 
   if (args.length === 1) return args[0];
-  return makeToken(head, args, [], null, {}, rangeOf(node));
+  return makeToken(head, args, [], null, emptyMetadata(), rangeOf(node));
 }
 
 function collectBinaryTerms(
@@ -148,7 +150,7 @@ function buildTensor(node: SyntaxNode): ValidationToken {
   const indexBlock = node.childForFieldName("indices");
   const { indices, metadata } = indexBlock
     ? buildIndexList(indexBlock.namedChildren[0])
-    : { indices: [] as ChacanaIndex[], metadata: {} };
+    : { indices: [] as ChacanaIndex[], metadata: emptyMetadata() };
   return makeToken(name, [], indices, null, metadata, rangeOf(node));
 }
 
@@ -169,7 +171,7 @@ function buildFunctionalOp(node: SyntaxNode): ValidationToken {
   const indexBlock = node.childForFieldName("indices");
   const { indices, metadata } = indexBlock
     ? buildIndexList(indexBlock.namedChildren[0])
-    : { indices: [] as ChacanaIndex[], metadata: {} };
+    : { indices: [] as ChacanaIndex[], metadata: emptyMetadata() };
 
   return makeToken(head, args, indices, null, metadata, rangeOf(node));
 }
@@ -177,7 +179,7 @@ function buildFunctionalOp(node: SyntaxNode): ValidationToken {
 function buildScalar(node: SyntaxNode): ValidationToken {
   const text = node.text;
   const val = text.includes(".") ? parseFloat(text) : parseInt(text, 10);
-  return makeToken(HEAD_NUMBER, [], [], val, {}, rangeOf(node));
+  return makeToken(HEAD_NUMBER, [], [], val, emptyMetadata(), rangeOf(node));
 }
 
 function buildPerturbation(node: SyntaxNode): ValidationToken {
@@ -190,7 +192,7 @@ function buildPerturbation(node: SyntaxNode): ValidationToken {
     body ? [body] : [],
     [],
     null,
-    { order },
+    { ...emptyMetadata(), order },
     rangeOf(node),
   );
 }
@@ -201,17 +203,17 @@ function buildCommutator(node: SyntaxNode): ValidationToken {
   const args: ValidationToken[] = [];
   if (left) { const t = buildAST(left); if (t) args.push(t); }
   if (right) { const t = buildAST(right); if (t) args.push(t); }
-  return makeToken(HEAD_COMMUTATOR, args, [], null, {}, rangeOf(node));
+  return makeToken(HEAD_COMMUTATOR, args, [], null, emptyMetadata(), rangeOf(node));
 }
 
 interface IndexListResult {
   indices: ChacanaIndex[];
-  metadata: Record<string, unknown>;
+  metadata: TokenMetadata;
 }
 
 function buildIndexList(indexListNode: SyntaxNode): IndexListResult {
   if (!indexListNode || indexListNode.type !== "index_list") {
-    return { indices: [], metadata: {} };
+    return { indices: [], metadata: emptyMetadata() };
   }
 
   const flatIndices: ChacanaIndex[] = [];
@@ -240,9 +242,11 @@ function buildIndexList(indexListNode: SyntaxNode): IndexListResult {
     }
   }
 
-  const metadata: Record<string, unknown> = {};
-  if (symGroups.length > 0) metadata.symmetrized_groups = symGroups;
-  if (antisymGroups.length > 0) metadata.antisymmetrized_groups = antisymGroups;
+  const metadata: TokenMetadata = {
+    symmetrized_groups: symGroups,
+    antisymmetrized_groups: antisymGroups,
+    order: null,
+  };
 
   return { indices: flatIndices, metadata };
 }

@@ -29,12 +29,22 @@ export interface SourceRange {
   endColumn: number;
 }
 
+export interface TokenMetadata {
+  symmetrized_groups: number[][];
+  antisymmetrized_groups: number[][];
+  order: number | null;
+}
+
+export function emptyMetadata(): TokenMetadata {
+  return { symmetrized_groups: [], antisymmetrized_groups: [], order: null };
+}
+
 export interface ValidationToken {
   head: string;
   indices: ChacanaIndex[];
   args: ValidationToken[];
   value: number | null;
-  metadata: Record<string, unknown>;
+  metadata: TokenMetadata;
   range: SourceRange | null;
 }
 
@@ -96,7 +106,7 @@ export function makeToken(
   args: ValidationToken[] = [],
   indices: ChacanaIndex[] = [],
   value: number | null = null,
-  metadata: Record<string, unknown> = {},
+  metadata: TokenMetadata = emptyMetadata(),
   range: SourceRange | null = null,
 ): ValidationToken {
   return { head, args, indices, value, metadata, range };

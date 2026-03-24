@@ -24,6 +24,7 @@ from chacana.ast import (
     HEAD_WEDGE,
     ChacanaIndex,
     IndexType,
+    TokenMetadata,
     ValidationToken,
     Variance,
 )
@@ -101,14 +102,19 @@ class ChacanaVisitor(PTNodeVisitor):
         if len(children) > 1 and isinstance(children[0], ValidationToken):
             # functional_op with indices
             token = children[0]
-            token.indices = children[1]
+            raw = children[1]
+            if isinstance(raw, tuple):
+                token.indices = list(raw[0])
+                token.metadata = raw[1]
+            else:
+                token.indices = list(raw)
             return token
         return children[0]
 
     def visit_tensor_expr(self, node: Any, children: Any) -> ValidationToken:
         name = children[0]
         indices: list[ChacanaIndex] = []
-        metadata: dict[str, Any] = {}
+        metadata = TokenMetadata()
         if len(children) > 1:
             raw = children[1]
             if isinstance(raw, tuple):
@@ -119,7 +125,7 @@ class ChacanaVisitor(PTNodeVisitor):
 
     def visit_index_list(
         self, node: Any, children: Any
-    ) -> tuple[list[ChacanaIndex], dict[str, Any]] | list[ChacanaIndex]:
+    ) -> tuple[list[ChacanaIndex], TokenMetadata] | list[ChacanaIndex]:
         flat_indices: list[ChacanaIndex] = []
         sym_groups: list[list[int]] = []
         antisym_groups: list[list[int]] = []
@@ -140,11 +146,10 @@ class ChacanaVisitor(PTNodeVisitor):
             # ignore trailing variance strings in ( a b _ )
 
         if sym_groups or antisym_groups:
-            meta: dict[str, Any] = {}
-            if sym_groups:
-                meta["symmetrized_groups"] = sym_groups
-            if antisym_groups:
-                meta["antisymmetrized_groups"] = antisym_groups
+            meta = TokenMetadata(
+                symmetrized_groups=sym_groups,
+                antisymmetrized_groups=antisym_groups,
+            )
             return (flat_indices, meta)
         return flat_indices
 
@@ -193,7 +198,9 @@ class ChacanaVisitor(PTNodeVisitor):
     def visit_perturbation(self, node: Any, children: Any) -> ValidationToken:
         order = int(children[0])
         expr = children[1]
-        return ValidationToken(head=HEAD_PERTURBATION, args=[expr], metadata={"order": order})
+        return ValidationToken(
+            head=HEAD_PERTURBATION, args=[expr], metadata=TokenMetadata(order=order)
+        )
 
     def visit_commutator(self, node: Any, children: Any) -> ValidationToken:
         return ValidationToken(head=HEAD_COMMUTATOR, args=[children[0], children[1]])

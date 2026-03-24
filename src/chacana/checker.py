@@ -173,9 +173,11 @@ def _check_symmetry(token: ValidationToken, ctx: GlobalContext | None) -> None:
        (metadata: symmetrized_groups / antisymmetrized_groups)
     2. Declared symmetries in the context (tensor.symmetries)
     """
-    for group_key in ("symmetrized_groups", "antisymmetrized_groups"):
-        groups = token.metadata.get(group_key, [])
-        kind = "symmetrization" if "anti" not in group_key else "anti-symmetrization"
+    for group_key, groups in (
+        ("symmetrization", token.metadata.symmetrized_groups),
+        ("anti-symmetrization", token.metadata.antisymmetrized_groups),
+    ):
+        kind = group_key
         for group in groups:
             if len(group) < 2:
                 continue

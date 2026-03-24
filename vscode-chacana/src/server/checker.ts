@@ -233,7 +233,9 @@ function checkSymmetry(
   diags: CheckerDiagnostic[],
 ): void {
   for (const groupKey of ["symmetrized_groups", "antisymmetrized_groups"]) {
-    const groups = (token.metadata[groupKey] ?? []) as number[][];
+    const groups = groupKey === "symmetrized_groups"
+      ? token.metadata.symmetrized_groups
+      : token.metadata.antisymmetrized_groups;
     const kind = groupKey.includes("anti") ? "anti-symmetrization" : "symmetrization";
     for (const group of groups) {
       if (group.length < 2) continue;

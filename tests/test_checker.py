@@ -2,7 +2,7 @@
 
 import pytest
 
-from chacana.ast import ChacanaIndex, IndexType, ValidationToken, Variance
+from chacana.ast import ChacanaIndex, IndexType, TokenMetadata, ValidationToken, Variance
 from chacana.checker import check
 from chacana.errors import ChacanaTypeError
 from chacana.grammar import create_parser
@@ -276,7 +276,7 @@ class TestSymmetryValidation:
                 ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
                 ChacanaIndex("b", Variance.CONTRA, index_type=IndexType.LATIN),
             ],
-            metadata={"symmetrized_groups": [[0, 1]]},
+            metadata=TokenMetadata(symmetrized_groups=[[0, 1]]),
         )
         with pytest.raises(ChacanaTypeError, match="[Vv]ariance.*symmetri"):
             check(token)
@@ -289,7 +289,7 @@ class TestSymmetryValidation:
                 ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
                 ChacanaIndex("b", Variance.COVAR, index_type=IndexType.GREEK),
             ],
-            metadata={"symmetrized_groups": [[0, 1]]},
+            metadata=TokenMetadata(symmetrized_groups=[[0, 1]]),
         )
         with pytest.raises(ChacanaTypeError, match="[Ii]ndex.type.*symmetri"):
             check(token)
@@ -302,7 +302,7 @@ class TestSymmetryValidation:
                 ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
                 ChacanaIndex("b", Variance.COVAR, index_type=IndexType.LATIN),
             ],
-            metadata={"antisymmetrized_groups": [[0, 1]]},
+            metadata=TokenMetadata(antisymmetrized_groups=[[0, 1]]),
         )
         check(token)  # should not raise
 
@@ -314,7 +314,7 @@ class TestSymmetryValidation:
                 ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
                 ChacanaIndex("b", Variance.CONTRA, index_type=IndexType.LATIN),
             ],
-            metadata={"antisymmetrized_groups": [[0, 1]]},
+            metadata=TokenMetadata(antisymmetrized_groups=[[0, 1]]),
         )
         with pytest.raises(ChacanaTypeError, match="[Vv]ariance.*symmetri"):
             check(token)
