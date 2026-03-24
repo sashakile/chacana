@@ -13,7 +13,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/sk/chacana"
+    "url": "https://github.com/sashakile/chacana"
   },
   "files": [
     "grammar.js",
