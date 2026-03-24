@@ -23,6 +23,7 @@ from chacana.ast import (
     ChacanaIndex,
     ValidationToken,
     Variance,
+    walk_tokens,
 )
 from chacana.context import GlobalContext
 from chacana.errors import ChacanaTypeError
@@ -119,7 +120,7 @@ def _check_contraction(token: ValidationToken, ctx: GlobalContext | None) -> Non
                     raise ChacanaTypeError(
                         f"Index '{label}' appears {len(group)} times (expected at most 2)"
                     )
-    elif token.head == HEAD_ADD or token.args:
+    else:
         for arg in token.args:
             _check_contraction(arg, ctx)
 
@@ -146,12 +147,12 @@ def _get_all_indices(token: ValidationToken) -> list[ChacanaIndex]:
 
 def _check_free_index_invariance(token: ValidationToken) -> None:
     """Rule 2: All terms in a sum must have the same free indices."""
-    if token.head == HEAD_ADD:
-        if len(token.args) < 2:
-            return
-        ref = _free_indices(token.args[0])
+    for t in walk_tokens(token):
+        if t.head != HEAD_ADD or len(t.args) < 2:
+            continue
+        ref = _free_indices(t.args[0])
         ref_counted = Counter((idx.label, idx.variance) for idx in ref)
-        for i, arg in enumerate(token.args[1:], 1):
+        for i, arg in enumerate(t.args[1:], 1):
             arg_free = _free_indices(arg)
             arg_counted = Counter((idx.label, idx.variance) for idx in arg_free)
             if ref_counted != arg_counted:
@@ -160,9 +161,6 @@ def _check_free_index_invariance(token: ValidationToken) -> None:
                     f"{_format_indices(ref)}, term {i} has "
                     f"{_format_indices(arg_free)}"
                 )
-    # Recurse into children
-    for arg in token.args:
-        _check_free_index_invariance(arg)
 
 
 def _check_symmetry(token: ValidationToken, ctx: GlobalContext | None) -> None:
@@ -173,11 +171,15 @@ def _check_symmetry(token: ValidationToken, ctx: GlobalContext | None) -> None:
        (metadata: symmetrized_groups / antisymmetrized_groups)
     2. Declared symmetries in the context (tensor.symmetries)
     """
-    for group_key, groups in (
+    for t in walk_tokens(token):
+        _check_symmetry_single(t, ctx)
+
+
+def _check_symmetry_single(token: ValidationToken, ctx: GlobalContext | None) -> None:
+    for kind, groups in (
         ("symmetrization", token.metadata.symmetrized_groups),
         ("anti-symmetrization", token.metadata.antisymmetrized_groups),
     ):
-        kind = group_key
         for group in groups:
             if len(group) < 2:
                 continue
@@ -221,44 +223,32 @@ def _check_symmetry(token: ValidationToken, ctx: GlobalContext | None) -> None:
                                 f"({other_idx.index_type.value})"
                             )
 
-    for arg in token.args:
-        _check_symmetry(arg, ctx)
+
+_STRUCTURAL_HEADS = frozenset({HEAD_ADD, HEAD_MULTIPLY, HEAD_WEDGE, HEAD_NEGATE, HEAD_NUMBER})
 
 
 def _check_rank(token: ValidationToken, ctx: GlobalContext) -> None:
     """Check that tensor usage matches declared rank and index pattern."""
-    if token.head in (HEAD_ADD, HEAD_MULTIPLY, HEAD_WEDGE):
-        for arg in token.args:
-            _check_rank(arg, ctx)
-        return
-
-    if token.head == HEAD_NUMBER:
-        return
-
-    # Recurse into functional ops, perturbation, commutator, negate, etc.
-    if token.args:
-        for arg in token.args:
-            _check_rank(arg, ctx)
-
-    decl = ctx.tensors.get(token.head)
-    if decl is None:
-        return
-
-    if token.indices and len(token.indices) != decl.rank:
-        raise ChacanaTypeError(
-            f"Tensor '{token.head}' declared with rank {decl.rank}, "
-            f"but used with {len(token.indices)} indices"
-        )
-
-    if token.indices and decl.index_pattern:
-        for i, (actual, expected) in enumerate(
-            zip(token.indices, decl.index_pattern, strict=False)
-        ):
-            if actual.variance != expected:
-                raise ChacanaTypeError(
-                    f"Tensor '{token.head}' index {i}: expected "
-                    f"{expected.value}, got {actual.variance.value}"
-                )
+    for t in walk_tokens(token):
+        if t.head in _STRUCTURAL_HEADS:
+            continue
+        decl = ctx.tensors.get(t.head)
+        if decl is None:
+            continue
+        if t.indices and len(t.indices) != decl.rank:
+            raise ChacanaTypeError(
+                f"Tensor '{t.head}' declared with rank {decl.rank}, "
+                f"but used with {len(t.indices)} indices"
+            )
+        if t.indices and decl.index_pattern:
+            for i, (actual, expected) in enumerate(
+                zip(t.indices, decl.index_pattern, strict=False)
+            ):
+                if actual.variance != expected:
+                    raise ChacanaTypeError(
+                        f"Tensor '{t.head}' index {i}: expected "
+                        f"{expected.value}, got {actual.variance.value}"
+                    )
 
 
 def _resolve_rank(token: ValidationToken, ctx: GlobalContext) -> int | None:
@@ -299,6 +289,11 @@ def _is_vector(token: ValidationToken, ctx: GlobalContext) -> bool | None:
 
 def _check_operators(token: ValidationToken, ctx: GlobalContext) -> None:
     """Check differential geometry operator constraints."""
+    for t in walk_tokens(token):
+        _check_operator_single(t, ctx)
+
+
+def _check_operator_single(token: ValidationToken, ctx: GlobalContext) -> None:
     if token.head == HEAD_HODGE_STAR and not ctx.active_metric:
         raise ChacanaTypeError("Hodge star operator requires an active_metric in the context")
 
@@ -342,9 +337,6 @@ def _check_operators(token: ValidationToken, ctx: GlobalContext) -> None:
             raise ChacanaTypeError(
                 f"Inverse requires a rank-2 tensor, but argument has rank {rank}"
             )
-
-    for arg in token.args:
-        _check_operators(arg, ctx)
 
 
 def _format_indices(indices: list[ChacanaIndex]) -> str:

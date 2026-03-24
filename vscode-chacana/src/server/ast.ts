@@ -101,6 +101,14 @@ export function detectIndexType(label: string): IndexType {
   return GREEK_RE.test(label) ? IndexType.Greek : IndexType.Latin;
 }
 
+/** Pre-order traversal of a token tree. */
+export function* walkTokens(token: ValidationToken): Generator<ValidationToken> {
+  yield token;
+  for (const arg of token.args) {
+    yield* walkTokens(arg);
+  }
+}
+
 export function makeToken(
   head: string,
   args: ValidationToken[] = [],

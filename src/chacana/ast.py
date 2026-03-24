@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
@@ -88,3 +89,10 @@ class ValidationToken:
         if meta:
             result["metadata"] = meta
         return result
+
+
+def walk_tokens(token: ValidationToken) -> Iterator[ValidationToken]:
+    """Pre-order traversal of a token tree."""
+    yield token
+    for arg in token.args:
+        yield from walk_tokens(arg)

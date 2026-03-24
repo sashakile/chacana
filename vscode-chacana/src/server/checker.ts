@@ -23,6 +23,7 @@ import {
   HEAD_HODGE_STAR,
   HEAD_INTERIOR_PRODUCT,
   HEAD_NUMBER,
+  walkTokens,
 } from "./ast.js";
 import type { GlobalContext } from "./context.js";
 
@@ -179,7 +180,7 @@ function checkContraction(
         }
       }
     }
-  } else if (token.head === HEAD_ADD || token.args.length > 0) {
+  } else {
     for (const arg of token.args) checkContraction(arg, ctx, diags);
   }
 }
@@ -190,22 +191,22 @@ function checkFreeIndexInvariance(
   token: ValidationToken,
   diags: CheckerDiagnostic[],
 ): void {
-  if (token.head === HEAD_ADD && token.args.length >= 2) {
-    const ref = freeIndices(token.args[0]);
+  for (const t of walkTokens(token)) {
+    if (t.head !== HEAD_ADD || t.args.length < 2) continue;
+    const ref = freeIndices(t.args[0]);
     const refCounted = countIndices(ref);
-    for (let i = 1; i < token.args.length; i++) {
-      const argFree = freeIndices(token.args[i]);
+    for (let i = 1; i < t.args.length; i++) {
+      const argFree = freeIndices(t.args[i]);
       const argCounted = countIndices(argFree);
       if (!mapsEqual(refCounted, argCounted)) {
         diags.push({
           message: `Free index mismatch in sum: term 0 has ${formatIndices(ref)}, term ${i} has ${formatIndices(argFree)}`,
-          range: token.range,
+          range: t.range,
           code: "chacana/free-index",
         });
       }
     }
   }
-  for (const arg of token.args) checkFreeIndexInvariance(arg, diags);
 }
 
 function countIndices(indices: ChacanaIndex[]): Map<string, number> {
@@ -232,11 +233,20 @@ function checkSymmetry(
   ctx: GlobalContext | null,
   diags: CheckerDiagnostic[],
 ): void {
-  for (const groupKey of ["symmetrized_groups", "antisymmetrized_groups"]) {
-    const groups = groupKey === "symmetrized_groups"
-      ? token.metadata.symmetrized_groups
-      : token.metadata.antisymmetrized_groups;
-    const kind = groupKey.includes("anti") ? "anti-symmetrization" : "symmetrization";
+  for (const t of walkTokens(token)) {
+    checkSymmetrySingle(t, ctx, diags);
+  }
+}
+
+function checkSymmetrySingle(
+  token: ValidationToken,
+  ctx: GlobalContext | null,
+  diags: CheckerDiagnostic[],
+): void {
+  for (const [kind, groups] of [
+    ["symmetrization", token.metadata.symmetrized_groups],
+    ["anti-symmetrization", token.metadata.antisymmetrized_groups],
+  ] as const) {
     for (const group of groups) {
       if (group.length < 2) continue;
       const ref = token.indices[group[0]];
@@ -281,49 +291,41 @@ function checkSymmetry(
       }
     }
   }
-
-  for (const arg of token.args) checkSymmetry(arg, ctx, diags);
 }
 
 // ── Rule 4: Rank ───────────────────────────────────────────────────
+
+const STRUCTURAL_HEADS = new Set([
+  HEAD_ADD, HEAD_MULTIPLY, HEAD_WEDGE, HEAD_NEGATE, HEAD_NUMBER,
+]);
 
 function checkRank(
   token: ValidationToken,
   ctx: GlobalContext,
   diags: CheckerDiagnostic[],
 ): void {
-  if (
-    token.head === HEAD_ADD ||
-    token.head === HEAD_MULTIPLY ||
-    token.head === HEAD_WEDGE
-  ) {
-    for (const arg of token.args) checkRank(arg, ctx, diags);
-    return;
-  }
-  if (token.head === HEAD_NUMBER) return;
-  if (token.args.length > 0) {
-    for (const arg of token.args) checkRank(arg, ctx, diags);
-  }
+  for (const t of walkTokens(token)) {
+    if (STRUCTURAL_HEADS.has(t.head)) continue;
+    const decl = ctx.tensors.get(t.head);
+    if (!decl) continue;
 
-  const decl = ctx.tensors.get(token.head);
-  if (!decl) return;
+    if (t.indices.length > 0 && t.indices.length !== decl.rank) {
+      diags.push({
+        message: `Tensor '${t.head}' declared with rank ${decl.rank}, but used with ${t.indices.length} indices`,
+        range: t.range,
+        code: "chacana/rank",
+      });
+    }
 
-  if (token.indices.length > 0 && token.indices.length !== decl.rank) {
-    diags.push({
-      message: `Tensor '${token.head}' declared with rank ${decl.rank}, but used with ${token.indices.length} indices`,
-      range: token.range,
-      code: "chacana/rank",
-    });
-  }
-
-  if (token.indices.length > 0 && decl.indexPattern.length > 0) {
-    for (let i = 0; i < Math.min(token.indices.length, decl.indexPattern.length); i++) {
-      if (token.indices[i].variance !== decl.indexPattern[i]) {
-        diags.push({
-          message: `Tensor '${token.head}' index ${i}: expected ${decl.indexPattern[i]}, got ${token.indices[i].variance}`,
-          range: token.range,
-          code: "chacana/rank",
-        });
+    if (t.indices.length > 0 && decl.indexPattern.length > 0) {
+      for (let i = 0; i < Math.min(t.indices.length, decl.indexPattern.length); i++) {
+        if (t.indices[i].variance !== decl.indexPattern[i]) {
+          diags.push({
+            message: `Tensor '${t.head}' index ${i}: expected ${decl.indexPattern[i]}, got ${t.indices[i].variance}`,
+            range: t.range,
+            code: "chacana/rank",
+          });
+        }
       }
     }
   }
@@ -332,6 +334,16 @@ function checkRank(
 // ── Rule 5: Operator Constraints ───────────────────────────────────
 
 function checkOperators(
+  token: ValidationToken,
+  ctx: GlobalContext,
+  diags: CheckerDiagnostic[],
+): void {
+  for (const t of walkTokens(token)) {
+    checkOperatorSingle(t, ctx, diags);
+  }
+}
+
+function checkOperatorSingle(
   token: ValidationToken,
   ctx: GlobalContext,
   diags: CheckerDiagnostic[],
@@ -406,8 +418,6 @@ function checkOperators(
       });
     }
   }
-
-  for (const arg of token.args) checkOperators(arg, ctx, diags);
 }
 
 // ── Public API ─────────────────────────────────────────────────────
