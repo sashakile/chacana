@@ -158,10 +158,14 @@ function siteRoot() {
   return idx !== -1 ? loc.substring(0, idx) + '/' : '../';
 }
 
+var TS_SRI = 'sha384-uYgb55edOAS63pUkgoGB7s1F2xTznuWl7wRUxVsjvf9cyOSw/VXlG5ZJKTpbEuIE';
+
 async function loadTreeSitter() {
   await new Promise(function(resolve, reject) {
     var s = document.createElement('script');
     s.src = TS_CDN + 'tree-sitter.js';
+    s.integrity = TS_SRI;
+    s.crossOrigin = 'anonymous';
     s.onload = resolve;
     s.onerror = function() { reject(new Error('Failed to load tree-sitter.js')); };
     document.head.appendChild(s);
