@@ -35,6 +35,11 @@ class TestEndToEnd:
         result = chacana.parse("T{^a _b}")
         assert result["head"] == "T"
 
+    def test_same_variance_contraction_caught_without_context(self):
+        """parse() should run structural checks even without context."""
+        with pytest.raises(ChacanaTypeError, match="same variance"):
+            chacana.parse("A{_a} * B{_a}")
+
     def test_scalar_expression(self):
         result = chacana.parse("42")
         assert result["head"] == "Number"

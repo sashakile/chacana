@@ -39,6 +39,5 @@ def parse(expr: str, *, context: GlobalContext | None = None) -> dict[str, Any]:
         raise ChacanaParseError(str(e)) from e
 
     token = parse_to_ast(tree)
-    if context is not None:
-        check(token, context)
+    check(token, context)
     return token.to_dict()
