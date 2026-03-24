@@ -172,4 +172,10 @@ describe("astBuilder", () => {
     const ast = buildAST(tree.rootNode);
     expect(ast).toBeNull();
   });
+
+  it("returns null for empty paren expression", () => {
+    const tree = parse(parser, "()");
+    // Should return null, not crash
+    expect(() => buildAST(tree.rootNode)).not.toThrow();
+  });
 });

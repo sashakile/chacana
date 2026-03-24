@@ -77,8 +77,10 @@ export function buildAST(node: SyntaxNode): ValidationToken | null {
       return buildPerturbation(node);
     case "commutator":
       return buildCommutator(node);
-    case "paren_expression":
-      return buildAST(node.namedChildren[0]);
+    case "paren_expression": {
+      const inner = node.namedChildren[0];
+      return inner ? buildAST(inner) : null;
+    }
     default:
       return null;
   }
