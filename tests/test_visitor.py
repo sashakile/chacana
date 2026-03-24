@@ -3,6 +3,7 @@
 import pytest
 
 from chacana.ast import IndexType, Variance
+from chacana.errors import ChacanaTypeError
 from chacana.grammar import create_parser, normalize_input, parse_and_validate
 from chacana.visitor import parse_to_ast
 
@@ -224,6 +225,16 @@ class TestVisitorSymmetrization:
         """Anti-symmetrized groups should be recorded in metadata."""
         token = _parse("T{_[ a b _]}")
         assert token.metadata.antisymmetrized_groups == [[0, 1]]
+
+    def test_mismatched_variance_in_symmetrization_rejected(self):
+        """T{_( a b ^)} — covariant open, contravariant close — must error."""
+        with pytest.raises(ChacanaTypeError, match="(?i)variance.*mismatch|mismatch.*variance"):
+            _parse("T{_( a b ^)}")
+
+    def test_mismatched_variance_in_anti_symmetrization_rejected(self):
+        """T{^[ a b _]} — contravariant open, covariant close — must error."""
+        with pytest.raises(ChacanaTypeError, match="(?i)variance.*mismatch|mismatch.*variance"):
+            _parse("T{^[ a b _]}")
 
     def test_mixed_sym_and_plain_indices(self):
         """T{^c _( a b _)} should have sym group at positions [1, 2]."""

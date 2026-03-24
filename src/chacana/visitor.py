@@ -28,6 +28,22 @@ from chacana.ast import (
     ValidationToken,
     Variance,
 )
+from chacana.errors import ChacanaTypeError
+
+
+def _check_variance_delimiters(children: Any, kind: str) -> None:
+    """Raise if opening and closing variance markers don't match."""
+    if len(children) >= 3 and isinstance(children[2], str) and children[2] in ("^", "_"):
+        opening = children[0]
+        closing = children[2]
+        if opening != closing:
+            open_name = "contravariant" if opening == "^" else "covariant"
+            close_name = "contravariant" if closing == "^" else "covariant"
+            raise ChacanaTypeError(
+                f"Variance mismatch in {kind}: opening marker is "
+                f"{open_name} ({opening}) but closing marker is "
+                f"{close_name} ({closing})"
+            )
 
 
 @dataclass
@@ -154,10 +170,12 @@ class ChacanaVisitor(PTNodeVisitor):
         return flat_indices
 
     def visit_symmetrization(self, node: Any, children: Any) -> _SymGroup:
+        _check_variance_delimiters(children, "symmetrization")
         indices: list[ChacanaIndex] = children[1]
         return _SymGroup(indices=indices, kind="sym")
 
     def visit_anti_symmetrization(self, node: Any, children: Any) -> _SymGroup:
+        _check_variance_delimiters(children, "anti-symmetrization")
         return _SymGroup(indices=children[1], kind="antisym")
 
     def visit_index(self, node: Any, children: Any) -> ChacanaIndex:
