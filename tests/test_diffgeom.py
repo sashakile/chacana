@@ -176,9 +176,10 @@ class TestExteriorDerivative:
         check(token, diffgeom_context)
 
     def test_d_without_context(self):
-        """d(omega) should work without context (no special type check)."""
+        """d(omega) passes structural checks without context; operator checks skipped."""
         token = _make_token("d(omega)")
-        check(token)  # no context, should not raise
+        result = check(token)  # structural checks only (no ctx)
+        assert result is token
 
 
 # ===========================================================================
@@ -214,9 +215,10 @@ class TestHodgeStar:
             check(token, no_metric_context)
 
     def test_hodge_without_any_context(self):
-        """hodge(omega) without any context — gracefully skip."""
+        """hodge(omega) passes structural checks without context; metric check skipped."""
         token = _make_token("hodge(omega)")
-        check(token)  # no context, should not raise
+        result = check(token)  # structural checks only (no ctx)
+        assert result is token
 
 
 # ===========================================================================
@@ -239,9 +241,10 @@ class TestInteriorProduct:
             check(token, diffgeom_context)
 
     def test_interior_product_without_context(self):
-        """i(X, omega) without context — gracefully skip."""
+        """i(X, omega) passes structural checks without context; vector check skipped."""
         token = _make_token("i(X, omega)")
-        check(token)  # no context, should not raise
+        result = check(token)  # structural checks only (no ctx)
+        assert result is token
 
     def test_interior_product_first_arg_must_be_vector(self, diffgeom_context):
         """First arg of i(...) must be a vector (rank 1, contravariant)."""
@@ -278,9 +281,10 @@ class TestLieDerivative:
             check(token, diffgeom_context)
 
     def test_lie_derivative_without_context(self):
-        """L(X, T) without context — gracefully skip."""
+        """L(X, T) passes structural checks without context; vector check skipped."""
         token = _make_token("L(X, T)")
-        check(token)  # no context, should not raise
+        result = check(token)  # structural checks only (no ctx)
+        assert result is token
 
 
 # ===========================================================================
@@ -314,9 +318,10 @@ class TestTrace:
             check(token, diffgeom_context)
 
     def test_trace_without_context(self):
-        """Tr(T) without context — gracefully skip."""
+        """Tr(T) passes structural checks without context; rank check skipped."""
         token = _make_token("Tr(T)")
-        check(token)  # should not raise
+        result = check(token)  # structural checks only (no ctx)
+        assert result is token
 
 
 # ===========================================================================
@@ -344,9 +349,10 @@ class TestDeterminant:
             check(token, diffgeom_context)
 
     def test_det_without_context(self):
-        """det(T) without context — gracefully skip."""
+        """det(T) passes structural checks without context; rank check skipped."""
         token = _make_token("det(T)")
-        check(token)  # should not raise
+        result = check(token)  # structural checks only (no ctx)
+        assert result is token
 
 
 # ===========================================================================
@@ -380,9 +386,10 @@ class TestInverse:
             check(token, diffgeom_context)
 
     def test_inv_without_context(self):
-        """inv(T) without context — gracefully skip."""
+        """inv(T) passes structural checks without context; rank check skipped."""
         token = _make_token("inv(T)")
-        check(token)  # should not raise
+        result = check(token)  # structural checks only (no ctx)
+        assert result is token
 
 
 # ===========================================================================
