@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import threading
 import unicodedata
 from typing import Any
 
@@ -148,15 +149,16 @@ def _reject_nested_symmetrization(parse_tree: Any) -> None:
         )
 
 
-_cached_parser: ParserPython | None = None
+_thread_local = threading.local()
 
 
 def _get_parser() -> ParserPython:
-    """Return a cached parser instance (created once, reused)."""
-    global _cached_parser  # noqa: PLW0603
-    if _cached_parser is None:
-        _cached_parser = create_parser()
-    return _cached_parser
+    """Return a thread-local cached parser instance."""
+    parser = getattr(_thread_local, "parser", None)
+    if parser is None:
+        parser = create_parser()
+        _thread_local.parser = parser
+    return parser
 
 
 def parse_and_validate(expr: str) -> Any:
