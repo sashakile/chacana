@@ -339,89 +339,103 @@ function checkRank(
 
 // ── Rule 5: Operator Constraints ───────────────────────────────────
 
-function checkOperators(
+type OperatorCheck = (
   token: ValidationToken,
   ctx: GlobalContext,
   diags: CheckerDiagnostic[],
-): void {
-  for (const t of walkTokens(token)) {
-    checkOperatorSingle(t, ctx, diags);
-  }
-}
+) => void;
 
-function checkOperatorSingle(
+function requiresMetric(
   token: ValidationToken,
   ctx: GlobalContext,
   diags: CheckerDiagnostic[],
 ): void {
-  if (token.head === HEAD_HODGE_STAR && !ctx.activeMetric) {
+  if (!ctx.activeMetric) {
     diags.push({
       message: "Hodge star operator requires an active_metric in the context",
       range: token.range,
       code: "chacana/operator",
     });
   }
+}
 
-  if (token.head === HEAD_INTERIOR_PRODUCT && token.args.length >= 2) {
-    const vecCheck = isVector(token.args[0], ctx);
-    if (vecCheck === false) {
+function firstArgIsVector(opName: string): OperatorCheck {
+  return (token, ctx, diags) => {
+    if (token.args.length < 1) return;
+    if (isVector(token.args[0], ctx) === false) {
       diags.push({
-        message: "Interior product first argument must be a vector field (rank 1 contravariant)",
+        message: `${opName} first argument must be a vector field (rank 1 contravariant)`,
         range: token.range,
         code: "chacana/operator",
       });
     }
-    const secondRank = resolveRank(token.args[1], ctx);
-    if (secondRank != null && secondRank === 0) {
-      diags.push({
-        message: "Interior product is undefined for 0-forms (rank 0)",
-        range: token.range,
-        code: "chacana/operator",
-      });
-    }
+  };
+}
+
+function secondArgNotZeroForm(
+  token: ValidationToken,
+  ctx: GlobalContext,
+  diags: CheckerDiagnostic[],
+): void {
+  if (token.args.length < 2) return;
+  const rank = resolveRank(token.args[1], ctx);
+  if (rank != null && rank === 0) {
+    diags.push({
+      message: "Interior product is undefined for 0-forms (rank 0)",
+      range: token.range,
+      code: "chacana/operator",
+    });
   }
+}
 
-  if (token.head === HEAD_LIE_DERIVATIVE && token.args.length >= 1) {
-    const vecCheck = isVector(token.args[0], ctx);
-    if (vecCheck === false) {
-      diags.push({
-        message: "Lie derivative first argument must be a vector field (rank 1 contravariant)",
-        range: token.range,
-        code: "chacana/operator",
-      });
-    }
-  }
-
-  if (token.head === HEAD_TRACE && token.args.length >= 1) {
+function firstArgMinRank(minRank: number, opName: string): OperatorCheck {
+  return (token, ctx, diags) => {
+    if (token.args.length < 1) return;
     const rank = resolveRank(token.args[0], ctx);
-    if (rank != null && rank < 2) {
+    if (rank != null && rank < minRank) {
       diags.push({
-        message: `Trace requires a tensor of rank >= 2, but argument has rank ${rank}`,
+        message: `${opName} requires a tensor of rank >= ${minRank}, but argument has rank ${rank}`,
         range: token.range,
         code: "chacana/operator",
       });
     }
-  }
+  };
+}
 
-  if (token.head === HEAD_DETERMINANT && token.args.length >= 1) {
+function firstArgExactRank(exactRank: number, opName: string): OperatorCheck {
+  return (token, ctx, diags) => {
+    if (token.args.length < 1) return;
     const rank = resolveRank(token.args[0], ctx);
-    if (rank != null && rank !== 2) {
+    if (rank != null && rank !== exactRank) {
       diags.push({
-        message: `Determinant requires a rank-2 tensor, but argument has rank ${rank}`,
+        message: `${opName} requires a rank-${exactRank} tensor, but argument has rank ${rank}`,
         range: token.range,
         code: "chacana/operator",
       });
     }
-  }
+  };
+}
 
-  if (token.head === HEAD_INVERSE && token.args.length >= 1) {
-    const rank = resolveRank(token.args[0], ctx);
-    if (rank != null && rank !== 2) {
-      diags.push({
-        message: `Inverse requires a rank-2 tensor, but argument has rank ${rank}`,
-        range: token.range,
-        code: "chacana/operator",
-      });
+const OPERATOR_CONSTRAINTS: Record<string, OperatorCheck[]> = {
+  [HEAD_HODGE_STAR]: [requiresMetric],
+  [HEAD_INTERIOR_PRODUCT]: [firstArgIsVector("Interior product"), secondArgNotZeroForm],
+  [HEAD_LIE_DERIVATIVE]: [firstArgIsVector("Lie derivative")],
+  [HEAD_TRACE]: [firstArgMinRank(2, "Trace")],
+  [HEAD_DETERMINANT]: [firstArgExactRank(2, "Determinant")],
+  [HEAD_INVERSE]: [firstArgExactRank(2, "Inverse")],
+};
+
+function checkOperators(
+  token: ValidationToken,
+  ctx: GlobalContext,
+  diags: CheckerDiagnostic[],
+): void {
+  for (const t of walkTokens(token)) {
+    const constraints = OPERATOR_CONSTRAINTS[t.head];
+    if (constraints) {
+      for (const check of constraints) {
+        check(t, ctx, diags);
+      }
     }
   }
 }

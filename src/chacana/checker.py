@@ -6,6 +6,7 @@ Rules 1 (contraction), 2 (free index invariance), 3 (symmetry validity).
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable
 
 from chacana.ast import (
     HEAD_ADD,
@@ -282,56 +283,81 @@ def _is_vector(token: ValidationToken, ctx: GlobalContext) -> bool | None:
     return pattern[0] == Variance.CONTRA
 
 
+OperatorCheck = Callable[[ValidationToken, GlobalContext], None]
+
+
+def _requires_metric(token: ValidationToken, ctx: GlobalContext) -> None:
+    if not ctx.active_metric:
+        raise ChacanaTypeError("Hodge star operator requires an active_metric in the context")
+
+
+def _first_arg_is_vector(op_name: str) -> OperatorCheck:
+    def check(token: ValidationToken, ctx: GlobalContext) -> None:
+        if len(token.args) < 1:
+            return
+        if _is_vector(token.args[0], ctx) is False:
+            raise ChacanaTypeError(
+                f"{op_name} first argument must be a vector field (rank 1 contravariant)"
+            )
+
+    return check
+
+
+def _second_arg_not_zero_form(token: ValidationToken, ctx: GlobalContext) -> None:
+    if len(token.args) < 2:
+        return
+    rank = _resolve_rank(token.args[1], ctx)
+    if rank is not None and rank == 0:
+        raise ChacanaTypeError(
+            "Interior product is undefined for 0-forms (rank 0); "
+            "second argument must be a p-form with p >= 1"
+        )
+
+
+def _first_arg_min_rank(min_rank: int, op_name: str) -> OperatorCheck:
+    def check(token: ValidationToken, ctx: GlobalContext) -> None:
+        if len(token.args) < 1:
+            return
+        rank = _resolve_rank(token.args[0], ctx)
+        if rank is not None and rank < min_rank:
+            raise ChacanaTypeError(
+                f"{op_name} requires a tensor of rank >= {min_rank}, but argument has rank {rank}"
+            )
+
+    return check
+
+
+def _first_arg_exact_rank(exact_rank: int, op_name: str) -> OperatorCheck:
+    def check(token: ValidationToken, ctx: GlobalContext) -> None:
+        if len(token.args) < 1:
+            return
+        rank = _resolve_rank(token.args[0], ctx)
+        if rank is not None and rank != exact_rank:
+            raise ChacanaTypeError(
+                f"{op_name} requires a rank-{exact_rank} tensor, but argument has rank {rank}"
+            )
+
+    return check
+
+
+_OPERATOR_CONSTRAINTS: dict[str, list[OperatorCheck]] = {
+    HEAD_HODGE_STAR: [_requires_metric],
+    HEAD_INTERIOR_PRODUCT: [
+        _first_arg_is_vector("Interior product"),
+        _second_arg_not_zero_form,
+    ],
+    HEAD_LIE_DERIVATIVE: [_first_arg_is_vector("Lie derivative")],
+    HEAD_TRACE: [_first_arg_min_rank(2, "Trace")],
+    HEAD_DETERMINANT: [_first_arg_exact_rank(2, "Determinant")],
+    HEAD_INVERSE: [_first_arg_exact_rank(2, "Inverse")],
+}
+
+
 def _check_operators(token: ValidationToken, ctx: GlobalContext) -> None:
     """Check differential geometry operator constraints."""
     for t in walk_tokens(token):
-        _check_operator_single(t, ctx)
-
-
-def _check_operator_single(token: ValidationToken, ctx: GlobalContext) -> None:
-    if token.head == HEAD_HODGE_STAR and not ctx.active_metric:
-        raise ChacanaTypeError("Hodge star operator requires an active_metric in the context")
-
-    if token.head == HEAD_INTERIOR_PRODUCT and len(token.args) >= 2:
-        vec_check = _is_vector(token.args[0], ctx)
-        if vec_check is False:
-            raise ChacanaTypeError(
-                "Interior product first argument must be a vector field (rank 1 contravariant)"
-            )
-        second_rank = _resolve_rank(token.args[1], ctx)
-        if second_rank is not None and second_rank == 0:
-            raise ChacanaTypeError(
-                "Interior product is undefined for 0-forms (rank 0); "
-                "second argument must be a p-form with p >= 1"
-            )
-
-    if token.head == HEAD_LIE_DERIVATIVE and len(token.args) >= 1:
-        vec_check = _is_vector(token.args[0], ctx)
-        if vec_check is False:
-            raise ChacanaTypeError(
-                "Lie derivative first argument must be a vector field (rank 1 contravariant)"
-            )
-
-    if token.head == HEAD_TRACE and len(token.args) >= 1:
-        rank = _resolve_rank(token.args[0], ctx)
-        if rank is not None and rank < 2:
-            raise ChacanaTypeError(
-                f"Trace requires a tensor of rank >= 2, but argument has rank {rank}"
-            )
-
-    if token.head == HEAD_DETERMINANT and len(token.args) >= 1:
-        rank = _resolve_rank(token.args[0], ctx)
-        if rank is not None and rank != 2:
-            raise ChacanaTypeError(
-                f"Determinant requires a rank-2 tensor, but argument has rank {rank}"
-            )
-
-    if token.head == HEAD_INVERSE and len(token.args) >= 1:
-        rank = _resolve_rank(token.args[0], ctx)
-        if rank is not None and rank != 2:
-            raise ChacanaTypeError(
-                f"Inverse requires a rank-2 tensor, but argument has rank {rank}"
-            )
+        for constraint in _OPERATOR_CONSTRAINTS.get(t.head, []):
+            constraint(t, ctx)
 
 
 def _format_indices(indices: list[ChacanaIndex]) -> str:
