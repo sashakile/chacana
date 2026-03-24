@@ -55,4 +55,12 @@ describe("go-to-definition", () => {
     const def = getDefinition(tree.rootNode, 0, 0, null, null);
     expect(def).toBeNull();
   });
+
+  it("does not crash when descendant is root-level anonymous node", () => {
+    const tree = parse(parser, "R{^a}");
+    // Should return null, not throw
+    expect(() =>
+      getDefinition(tree.rootNode, 0, 999, tomlPath, tensorLines),
+    ).not.toThrow();
+  });
 });

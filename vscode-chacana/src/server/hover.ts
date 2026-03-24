@@ -28,10 +28,10 @@ function nodeAtPosition(
   line: number,
   column: number,
 ): SyntaxNode | null {
-  let node = root.descendantForPosition({ row: line, column });
+  let node: SyntaxNode | null = root.descendantForPosition({ row: line, column });
   // Walk up to find a named node
   while (node && !node.isNamed) {
-    node = node.parent!;
+    node = node.parent;
   }
   return node;
 }

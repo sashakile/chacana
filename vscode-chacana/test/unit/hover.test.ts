@@ -80,4 +80,11 @@ describe("hover provider", () => {
     const h = getHover(tree.rootNode, 0, 0, null);
     expect(h).toBeNull();
   });
+
+  it("does not crash when descendant is root-level anonymous node", () => {
+    // Hover on a position that yields a root-level node (col way past end)
+    const tree = parse(parser, "R{^a}");
+    // Should return null, not throw
+    expect(() => getHover(tree.rootNode, 0, 999, ctx)).not.toThrow();
+  });
 });

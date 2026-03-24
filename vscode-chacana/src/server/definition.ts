@@ -27,8 +27,8 @@ export function getDefinition(
 ): DefinitionLocation | null {
   if (!tomlPath || !tensorLines) return null;
 
-  let node = root.descendantForPosition({ row: line, column });
-  while (node && !node.isNamed) node = node.parent!;
+  let node: SyntaxNode | null = root.descendantForPosition({ row: line, column });
+  while (node && !node.isNamed) node = node.parent;
   if (!node || node.type !== "identifier") return null;
 
   const parent = node.parent;
