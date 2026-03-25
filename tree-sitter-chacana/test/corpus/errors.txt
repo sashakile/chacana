@@ -39,7 +39,7 @@ d(A ^ )
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier)))

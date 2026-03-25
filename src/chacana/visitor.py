@@ -229,6 +229,9 @@ class ChacanaVisitor(PTNodeVisitor):
     def visit_identifier(self, node: Any, children: Any) -> str:
         return node.value  # type: ignore[no-any-return]
 
+    def visit_operator_keyword(self, node: Any, children: Any) -> str:
+        return node.value  # type: ignore[no-any-return]
+
     def visit_scalar(self, node: Any, children: Any) -> ValidationToken:
         val = float(node.value) if "." in node.value else int(node.value)
         return ValidationToken(head=HEAD_NUMBER, value=float(val))

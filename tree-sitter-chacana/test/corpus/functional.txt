@@ -8,7 +8,7 @@ d(omega)
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier)))))
@@ -23,7 +23,7 @@ d(omega){_a _b}
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier)))
@@ -46,7 +46,7 @@ d(A ^ B)
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (wedge_expression
         left: (tensor_expr
@@ -64,7 +64,7 @@ d()
 
 (source_file
   (functional_op
-    name: (identifier)))
+    name: (operator_keyword)))
 
 ================================================================================
 Lie derivative with two arguments
@@ -76,7 +76,7 @@ L(X, T{^a _b})
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier))
@@ -101,7 +101,7 @@ L(X, T)
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier))
@@ -118,7 +118,7 @@ L(X, g{_a _b})
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier))
@@ -143,7 +143,7 @@ L(X, g)
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier))
@@ -160,7 +160,7 @@ Tr(T)
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier)))))
@@ -175,7 +175,7 @@ Tr(T{^a _b})
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier)
@@ -198,7 +198,7 @@ det(g)
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier)))))
@@ -213,7 +213,7 @@ det(g{_a _b})
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier)
@@ -236,7 +236,7 @@ inv(M)
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier)))))
@@ -251,7 +251,7 @@ inv(g{_a _b})
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier)
@@ -274,7 +274,7 @@ star(F)
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier)))))
@@ -289,7 +289,7 @@ hodge(omega)
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier)))))
@@ -304,7 +304,7 @@ i(X, omega)
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier))
@@ -321,10 +321,10 @@ d(d(A))
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (functional_op
-        name: (identifier)
+        name: (operator_keyword)
         arguments: (argument_list
           (tensor_expr
             name: (identifier)))))))
@@ -340,7 +340,7 @@ d(A ^ B){_a _b _c} + L(X, T){_a _b _c}
 (source_file
   (sum_expression
     left: (functional_op
-      name: (identifier)
+      name: (operator_keyword)
       arguments: (argument_list
         (wedge_expression
           left: (tensor_expr
@@ -359,7 +359,7 @@ d(A ^ B){_a _b _c} + L(X, T){_a _b _c}
             variance: (variance_marker)
             name: (identifier)))))
     right: (functional_op
-      name: (identifier)
+      name: (operator_keyword)
       arguments: (argument_list
         (tensor_expr
           name: (identifier))
@@ -387,7 +387,7 @@ Tr(f)
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier)))))
@@ -402,7 +402,7 @@ i(X, f)
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier))
@@ -419,7 +419,7 @@ L(omega, T{^a _b})
 
 (source_file
   (functional_op
-    name: (identifier)
+    name: (operator_keyword)
     arguments: (argument_list
       (tensor_expr
         name: (identifier))

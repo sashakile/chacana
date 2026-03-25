@@ -50,6 +50,6 @@
 (tensor_expr
   name: (identifier) @tensor.reference)
 
-; Functional operator names — validate against known operators
+; Functional operator names — restricted to known operator keywords
 (functional_op
-  name: (identifier) @operator.reference)
+  name: (operator_keyword) @operator.reference)

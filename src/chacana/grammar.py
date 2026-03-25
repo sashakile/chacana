@@ -258,8 +258,12 @@ def variance() -> Any:
     return RegExMatch(r"[\^_]")
 
 
+def operator_keyword() -> Any:
+    return RegExMatch(r"(?:hodge|star|det|inv|Tr|d|L|i)(?![a-zA-Z0-9])")
+
+
 def functional_op() -> Any:
-    return identifier, "(", Optional(sum_expr, ZeroOrMore(",", sum_expr)), ")"
+    return operator_keyword, "(", Optional(sum_expr, ZeroOrMore(",", sum_expr)), ")"
 
 
 def perturbation() -> Any:

@@ -6,7 +6,7 @@
   name: (identifier) @type)
 
 (functional_op
-  name: (identifier) @function.builtin)
+  name: (operator_keyword) @function.builtin)
 
 ; Index names
 (index

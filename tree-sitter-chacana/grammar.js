@@ -63,9 +63,14 @@ module.exports = grammar({
       $.paren_expression,
     ),
 
+    // Known operator keywords for functional operators.
+    operator_keyword: $ => choice('d', 'L', 'Tr', 'det', 'inv', 'star', 'hodge', 'i'),
+
     // Functional operator: d(ω), L(X, T{^a _b}), Tr(T), etc.
+    // Only known operator keywords are accepted; unknown identifiers
+    // followed by '(' fall through to tensor_expr + paren_expression.
     functional_op: $ => prec(4, seq(
-      field('name', $.identifier),
+      field('name', $.operator_keyword),
       '(',
       optional(field('arguments', $.argument_list)),
       ')',

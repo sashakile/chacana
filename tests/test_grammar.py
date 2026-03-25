@@ -221,6 +221,11 @@ class TestGrammarRejects:
         with pytest.raises(NoMatch):
             parser.parse("T{^^a}")
 
+    def test_unknown_identifier_as_functional_op(self, parser):
+        """R(A+B) must not parse as functional_op — R is not a known operator."""
+        with pytest.raises(NoMatch):
+            parser.parse("R(A + B)")
+
 
 class TestUnicodeNormalization:
     """Tests for Unicode NFC normalization (spec requirement)."""
