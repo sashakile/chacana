@@ -11,7 +11,6 @@ from collections.abc import Callable
 from chacana.ast import (
     HEAD_ADD,
     HEAD_DETERMINANT,
-    HEAD_EXTERIOR_DERIVATIVE,
     HEAD_HODGE_STAR,
     HEAD_INTERIOR_PRODUCT,
     HEAD_INVERSE,
@@ -28,133 +27,61 @@ from chacana.ast import (
 )
 from chacana.context import GlobalContext
 from chacana.errors import ChacanaTypeError
-
-
-def _free_indices(token: ValidationToken) -> list[ChacanaIndex]:
-    """Return the free (uncontracted) indices of a token."""
-    if token.head == HEAD_ADD:
-        if token.args:
-            return _free_indices(token.args[0])
-        return []
-
-    if token.head == HEAD_NEGATE:
-        if token.args:
-            return _free_indices(token.args[0])
-        return []
-
-    if token.head == HEAD_MULTIPLY:
-        all_indices: list[ChacanaIndex] = []
-        for arg in token.args:
-            all_indices.extend(_free_indices(arg))
-        return _remove_contracted(all_indices)
-
-    if token.head == HEAD_WEDGE:
-        all_indices = []
-        for arg in token.args:
-            all_indices.extend(_free_indices(arg))
-        return all_indices  # Wedge products don't contract
-
-    if token.head == HEAD_EXTERIOR_DERIVATIVE:
-        if token.args:
-            return _free_indices(token.args[0])
-        return []
-
-    if token.head == HEAD_NUMBER:
-        return []
-
-    # Leaf tensor or expression with indices
-    return list(token.indices)
-
-
-def _remove_contracted(indices: list[ChacanaIndex]) -> list[ChacanaIndex]:
-    """Remove contracted pairs (same label, same index_type, opposite variance)."""
-    free: list[ChacanaIndex] = []
-    consumed: set[int] = set()
-    for i, idx in enumerate(indices):
-        if i in consumed:
-            continue
-        found_pair = False
-        for j, other in enumerate(indices):
-            if j <= i or j in consumed:
-                continue
-            if (
-                idx.label == other.label
-                and idx.index_type == other.index_type
-                and idx.variance != other.variance
-            ):
-                consumed.add(i)
-                consumed.add(j)
-                found_pair = True
-                break
-        if not found_pair:
-            free.append(idx)
-    return free
+from chacana.indices import IndexAnalyzer
 
 
 def _check_contraction(token: ValidationToken, ctx: GlobalContext | None) -> None:
     """Rule 1: Contraction indices must have opposite variance and matching index_type."""
+    analyzer = IndexAnalyzer(ctx)
+    _check_contraction_with(token, ctx, analyzer)
+
+
+def _check_contraction_with(
+    token: ValidationToken, ctx: GlobalContext | None, analyzer: IndexAnalyzer
+) -> None:
     if token.head in (HEAD_MULTIPLY, HEAD_WEDGE):
         all_indices: list[ChacanaIndex] = []
         for arg in token.args:
-            _check_contraction(arg, ctx)
-            all_indices.extend(_get_all_indices(arg))
+            _check_contraction_with(arg, ctx, analyzer)
+            all_indices.extend(analyzer.all_indices(arg))
 
-        if token.head == HEAD_MULTIPLY:
-            by_label: dict[str, list[ChacanaIndex]] = {}
-            for idx in all_indices:
-                by_label.setdefault(idx.label, []).append(idx)
-            for label, group in by_label.items():
-                if len(group) == 2:
-                    if group[0].index_type != group[1].index_type:
-                        raise ChacanaTypeError(
-                            f"Contraction index '{label}' has mismatched index type: "
-                            f"{group[0].index_type.value} vs {group[1].index_type.value}"
-                        )
-                    if group[0].variance == group[1].variance:
-                        if ctx and ctx.active_metric:
-                            continue
-                        raise ChacanaTypeError(
-                            f"Contraction index '{label}' appears twice with same "
-                            f"variance ({group[0].variance.value})"
-                        )
-                elif len(group) > 2:
+        by_label: dict[str, list[ChacanaIndex]] = {}
+        for idx in all_indices:
+            by_label.setdefault(idx.label, []).append(idx)
+        for label, group in by_label.items():
+            if len(group) == 2:
+                if group[0].index_type != group[1].index_type:
                     raise ChacanaTypeError(
-                        f"Index '{label}' appears {len(group)} times (expected at most 2)"
+                        f"Contraction index '{label}' has mismatched index type: "
+                        f"{group[0].index_type.value} vs {group[1].index_type.value}"
                     )
+                # Variance check only for Multiply (wedge doesn't contract).
+                if token.head == HEAD_MULTIPLY and group[0].variance == group[1].variance:
+                    if ctx and ctx.active_metric:
+                        continue
+                    raise ChacanaTypeError(
+                        f"Contraction index '{label}' appears twice with same "
+                        f"variance ({group[0].variance.value})"
+                    )
+            elif len(group) > 2:
+                raise ChacanaTypeError(
+                    f"Index '{label}' appears {len(group)} times (expected at most 2)"
+                )
     else:
         for arg in token.args:
-            _check_contraction(arg, ctx)
+            _check_contraction_with(arg, ctx, analyzer)
 
 
-def _get_all_indices(token: ValidationToken) -> list[ChacanaIndex]:
-    """Get all indices from a token (without cancelling contractions)."""
-    if token.head == HEAD_ADD:
-        if token.args:
-            return _get_all_indices(token.args[0])
-        return []
-    if token.head == HEAD_NEGATE:
-        if token.args:
-            return _get_all_indices(token.args[0])
-        return []
-    if token.head in (HEAD_MULTIPLY, HEAD_WEDGE):
-        result: list[ChacanaIndex] = []
-        for arg in token.args:
-            result.extend(_get_all_indices(arg))
-        return result
-    if token.head == HEAD_NUMBER:
-        return []
-    return list(token.indices)
-
-
-def _check_free_index_invariance(token: ValidationToken) -> None:
+def _check_free_index_invariance(token: ValidationToken, ctx: GlobalContext | None) -> None:
     """Rule 2: All terms in a sum must have the same free indices."""
+    analyzer = IndexAnalyzer(ctx)
     for t in walk_tokens(token):
         if t.head != HEAD_ADD or len(t.args) < 2:
             continue
-        ref = _free_indices(t.args[0])
+        ref = analyzer.free_indices(t.args[0])
         ref_counted = Counter((idx.label, idx.variance) for idx in ref)
         for i, arg in enumerate(t.args[1:], 1):
-            arg_free = _free_indices(arg)
+            arg_free = analyzer.free_indices(arg)
             arg_counted = Counter((idx.label, idx.variance) for idx in arg_free)
             if ref_counted != arg_counted:
                 raise ChacanaTypeError(
@@ -371,7 +298,7 @@ def _format_indices(indices: list[ChacanaIndex]) -> str:
 def check(token: ValidationToken, ctx: GlobalContext | None = None) -> ValidationToken:
     """Run all type checks on a ValidationToken. Returns the token if valid."""
     _check_contraction(token, ctx)
-    _check_free_index_invariance(token)
+    _check_free_index_invariance(token, ctx)
     _check_symmetry(token, ctx)
     if ctx is not None:
         _check_rank(token, ctx)

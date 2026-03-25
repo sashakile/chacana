@@ -33,33 +33,33 @@ export interface CheckerDiagnostic {
   code: string;
 }
 
-// ── Helpers ────────────────────────────────────────────────────────
+// ── Index analysis helpers (metric-aware) ─────────────────────────
 
-function freeIndices(token: ValidationToken): ChacanaIndex[] {
+function freeIndices(token: ValidationToken, metricAware: boolean = false): ChacanaIndex[] {
   if (token.head === HEAD_ADD) {
-    return token.args.length > 0 ? freeIndices(token.args[0]) : [];
+    return token.args.length > 0 ? freeIndices(token.args[0], metricAware) : [];
   }
   if (token.head === HEAD_NEGATE) {
-    return token.args.length > 0 ? freeIndices(token.args[0]) : [];
+    return token.args.length > 0 ? freeIndices(token.args[0], metricAware) : [];
   }
   if (token.head === HEAD_MULTIPLY) {
     const all: ChacanaIndex[] = [];
-    for (const arg of token.args) all.push(...freeIndices(arg));
-    return removeContracted(all);
+    for (const arg of token.args) all.push(...freeIndices(arg, metricAware));
+    return removeContracted(all, metricAware);
   }
   if (token.head === HEAD_WEDGE) {
     const all: ChacanaIndex[] = [];
-    for (const arg of token.args) all.push(...freeIndices(arg));
+    for (const arg of token.args) all.push(...freeIndices(arg, metricAware));
     return all;
   }
   if (token.head === HEAD_EXTERIOR_DERIVATIVE) {
-    return token.args.length > 0 ? freeIndices(token.args[0]) : [];
+    return token.args.length > 0 ? freeIndices(token.args[0], metricAware) : [];
   }
   if (token.head === HEAD_NUMBER) return [];
   return [...token.indices];
 }
 
-function removeContracted(indices: ChacanaIndex[]): ChacanaIndex[] {
+function removeContracted(indices: ChacanaIndex[], metricAware: boolean = false): ChacanaIndex[] {
   const free: ChacanaIndex[] = [];
   const consumed = new Set<number>();
   for (let i = 0; i < indices.length; i++) {
@@ -70,7 +70,7 @@ function removeContracted(indices: ChacanaIndex[]): ChacanaIndex[] {
       if (
         indices[i].label === indices[j].label &&
         indices[i].indexType === indices[j].indexType &&
-        indices[i].variance !== indices[j].variance
+        (indices[i].variance !== indices[j].variance || metricAware)
       ) {
         consumed.add(i);
         consumed.add(j);
@@ -84,7 +84,32 @@ function removeContracted(indices: ChacanaIndex[]): ChacanaIndex[] {
 }
 
 function getAllIndices(token: ValidationToken): ChacanaIndex[] {
-  if (token.head === HEAD_ADD || token.head === HEAD_NEGATE) {
+  if (token.head === HEAD_ADD) {
+    if (token.args.length === 0) return [];
+    // Max-multiplicity union across all terms (fixes y74).
+    const maxCounts = new Map<string, { idx: ChacanaIndex; count: number }>();
+    for (const arg of token.args) {
+      const argCounts = new Map<string, { idx: ChacanaIndex; count: number }>();
+      for (const idx of getAllIndices(arg)) {
+        const key = `${idx.label}:${idx.variance}:${idx.indexType}`;
+        const entry = argCounts.get(key);
+        if (entry) entry.count++;
+        else argCounts.set(key, { idx, count: 1 });
+      }
+      for (const [key, { idx, count }] of argCounts) {
+        const existing = maxCounts.get(key);
+        if (!existing || count > existing.count) {
+          maxCounts.set(key, { idx, count });
+        }
+      }
+    }
+    const result: ChacanaIndex[] = [];
+    for (const { idx, count } of maxCounts.values()) {
+      for (let i = 0; i < count; i++) result.push(idx);
+    }
+    return result;
+  }
+  if (token.head === HEAD_NEGATE) {
     return token.args.length > 0 ? getAllIndices(token.args[0]) : [];
   }
   if (token.head === HEAD_MULTIPLY || token.head === HEAD_WEDGE) {
@@ -148,36 +173,37 @@ function checkContraction(
       allIdx.push(...getAllIndices(arg));
     }
 
-    if (token.head === HEAD_MULTIPLY) {
-      const byLabel = new Map<string, ChacanaIndex[]>();
-      for (const idx of allIdx) {
-        const group = byLabel.get(idx.label) ?? [];
-        group.push(idx);
-        byLabel.set(idx.label, group);
-      }
-      for (const [label, group] of byLabel) {
-        if (group.length === 2) {
-          if (group[0].indexType !== group[1].indexType) {
-            diags.push({
-              message: `Contraction index '${label}' has mismatched index type: ${group[0].indexType} vs ${group[1].indexType}`,
-              range: token.range,
-              code: "chacana/contraction",
-            });
-          } else if (group[0].variance === group[1].variance) {
-            if (ctx?.activeMetric) continue;
-            diags.push({
-              message: `Contraction index '${label}' appears twice with same variance (${group[0].variance})`,
-              range: token.range,
-              code: "chacana/contraction",
-            });
-          }
-        } else if (group.length > 2) {
+    const byLabel = new Map<string, ChacanaIndex[]>();
+    for (const idx of allIdx) {
+      const group = byLabel.get(idx.label) ?? [];
+      group.push(idx);
+      byLabel.set(idx.label, group);
+    }
+    for (const [label, group] of byLabel) {
+      if (group.length === 2) {
+        if (group[0].indexType !== group[1].indexType) {
           diags.push({
-            message: `Index '${label}' appears ${group.length} times (expected at most 2)`,
+            message: `Contraction index '${label}' has mismatched index type: ${group[0].indexType} vs ${group[1].indexType}`,
+            range: token.range,
+            code: "chacana/contraction",
+          });
+        } else if (
+          token.head === HEAD_MULTIPLY &&
+          group[0].variance === group[1].variance
+        ) {
+          if (ctx?.activeMetric) continue;
+          diags.push({
+            message: `Contraction index '${label}' appears twice with same variance (${group[0].variance})`,
             range: token.range,
             code: "chacana/contraction",
           });
         }
+      } else if (group.length > 2) {
+        diags.push({
+          message: `Index '${label}' appears ${group.length} times (expected at most 2)`,
+          range: token.range,
+          code: "chacana/contraction",
+        });
       }
     }
   } else {
@@ -189,14 +215,16 @@ function checkContraction(
 
 function checkFreeIndexInvariance(
   token: ValidationToken,
+  ctx: GlobalContext | null,
   diags: CheckerDiagnostic[],
 ): void {
+  const metricAware = !!(ctx?.activeMetric);
   for (const t of walkTokens(token)) {
     if (t.head !== HEAD_ADD || t.args.length < 2) continue;
-    const ref = freeIndices(t.args[0]);
+    const ref = freeIndices(t.args[0], metricAware);
     const refCounted = countIndices(ref);
     for (let i = 1; i < t.args.length; i++) {
-      const argFree = freeIndices(t.args[i]);
+      const argFree = freeIndices(t.args[i], metricAware);
       const argCounted = countIndices(argFree);
       if (!mapsEqual(refCounted, argCounted)) {
         diags.push({
@@ -451,7 +479,7 @@ export function checkAll(
 ): CheckerDiagnostic[] {
   const diags: CheckerDiagnostic[] = [];
   checkContraction(token, ctx, diags);
-  checkFreeIndexInvariance(token, diags);
+  checkFreeIndexInvariance(token, ctx, diags);
   checkSymmetry(token, ctx, diags);
   if (ctx) {
     checkRank(token, ctx, diags);
