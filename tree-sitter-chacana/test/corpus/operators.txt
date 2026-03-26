@@ -338,6 +338,27 @@ Float scalar in expression
               name: (identifier))))))))
 
 ================================================================================
+Parenthesized expression with index attachment
+================================================================================
+
+(A + B){_a}
+
+--------------------------------------------------------------------------------
+
+(source_file
+  (paren_expression
+    (sum_expression
+      left: (tensor_expr
+        name: (identifier))
+      right: (tensor_expr
+        name: (identifier)))
+    indices: (index_block
+      (index_list
+        (index
+          variance: (variance_marker)
+          name: (identifier))))))
+
+================================================================================
 Nested product in parenthesized sum
 ================================================================================
 

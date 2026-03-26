@@ -201,6 +201,31 @@ class TestGrammarAccepts:
         assert token.head == "Add"
         assert token.args[1].head == "Negate"
 
+    def test_parenthesized_with_indices(self, parser):
+        """(A + B){_a} should attach indices to the inner expression."""
+        token = parse_to_ast(parser.parse("(A + B){_a}"))
+        assert token.head == "Add"
+        assert len(token.indices) == 1
+        assert token.indices[0].label == "a"
+
+    def test_parenthesized_with_multiple_indices(self, parser):
+        """(A * B){^a _b} should attach multiple indices."""
+        token = parse_to_ast(parser.parse("(A * B){^a _b}"))
+        assert token.head == "Multiply"
+        assert len(token.indices) == 2
+
+    def test_parenthesized_with_symmetrized_indices(self, parser):
+        """(A + B){_( a b _)} should attach symmetrized indices."""
+        token = parse_to_ast(parser.parse("(A + B){_( a b _)}"))
+        assert token.head == "Add"
+        assert len(token.metadata.symmetrized_groups) == 1
+
+    def test_parenthesized_no_indices_still_works(self, parser):
+        """(A + B) without indices should still work as before."""
+        token = parse_to_ast(parser.parse("(A + B)"))
+        assert token.head == "Add"
+        assert token.indices == []
+
 
 class TestGrammarRejects:
     def test_invalid_variance(self, parser):

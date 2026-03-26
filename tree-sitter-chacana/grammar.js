@@ -171,8 +171,13 @@ module.exports = grammar({
       ']',
     ),
 
-    // Parenthesized sub-expression
-    paren_expression: $ => seq('(', $._expression, ')'),
+    // Parenthesized sub-expression with optional index attachment
+    paren_expression: $ => seq(
+      '(',
+      $._expression,
+      ')',
+      optional(field('indices', $.index_block)),
+    ),
 
     // ── Terminals ──────────────────────────────────────────────────
 

@@ -218,7 +218,7 @@ def factor() -> Any:
         scalar,
         perturbation,
         commutator,
-        ("(", sum_expr, ")"),
+        ("(", sum_expr, ")", Optional("{", index_list, "}")),
         negate_expr,
     ]
 
