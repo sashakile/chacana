@@ -3,6 +3,7 @@
   "displayName": "Chacana Tensor Calculus",
   "description": "Syntax highlighting, diagnostics, and IDE features for Chacana tensor expressions",
   "version": "0.1.0",
+  "type": "module",
   "license": "MIT",
   "publisher": "sashakile",
   "engines": {

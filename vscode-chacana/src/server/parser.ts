@@ -8,7 +8,7 @@ import { join, resolve } from "path";
 
 let TreeSitter: typeof TreeSitterType;
 let chacanaLanguage: TreeSitterType.Language;
-let initialized = false;
+let initPromise: Promise<void> | null = null;
 
 export type Tree = TreeSitterType.Tree;
 export type SyntaxNode = TreeSitterType.SyntaxNode;
@@ -40,27 +40,30 @@ function resolveWasmDir(): string {
  * Must be called once before any parsing.
  * @param wasmDir - optional override for the WASM directory path
  */
-export async function initParser(wasmDir?: string): Promise<void> {
-  if (initialized) return;
+export function initParser(wasmDir?: string): Promise<void> {
+  if (initPromise) return initPromise;
 
-  // Dynamic import for web-tree-sitter (CJS compatible)
-  const mod = await import("web-tree-sitter");
-  TreeSitter = mod.default ?? mod;
+  initPromise = (async () => {
+    // Dynamic import for web-tree-sitter (CJS compatible)
+    const mod = await import("web-tree-sitter");
+    TreeSitter = mod.default ?? mod;
 
-  const dir = wasmDir ?? resolveWasmDir();
-  await TreeSitter.init({
-    locateFile: (path: string) => join(dir, path),
-  });
+    const dir = wasmDir ?? resolveWasmDir();
+    await TreeSitter.init({
+      locateFile: (path: string) => join(dir, path),
+    });
 
-  chacanaLanguage = await TreeSitter.Language.load(
-    join(dir, "tree-sitter-chacana.wasm"),
-  );
-  initialized = true;
+    chacanaLanguage = await TreeSitter.Language.load(
+      join(dir, "tree-sitter-chacana.wasm"),
+    );
+  })();
+
+  return initPromise;
 }
 
 /** Create a new parser instance with the Chacana language set. */
 export function createParser(): TreeSitterType {
-  if (!initialized) throw new Error("Call initParser() first");
+  if (!initPromise) throw new Error("Call initParser() first");
   const parser = new TreeSitter();
   parser.setLanguage(chacanaLanguage);
   return parser;

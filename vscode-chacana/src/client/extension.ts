@@ -42,7 +42,9 @@ export function activate(context: ExtensionContext): void {
     clientOptions,
   );
 
-  client.start();
+  client.start().then(undefined, (err) => {
+    console.error("Chacana LSP failed to start:", err);
+  });
 }
 
 export function deactivate(): Thenable<void> | undefined {
