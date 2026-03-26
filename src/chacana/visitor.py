@@ -28,7 +28,7 @@ from chacana.ast import (
     ValidationToken,
     Variance,
 )
-from chacana.errors import ChacanaTypeError
+from chacana.errors import ChacanaParseError, ChacanaTypeError
 
 
 def _check_variance_delimiters(children: Any, kind: str) -> None:
@@ -171,11 +171,15 @@ class ChacanaVisitor(PTNodeVisitor):
 
     def visit_symmetrization(self, node: Any, children: Any) -> _SymGroup:
         _check_variance_delimiters(children, "symmetrization")
+        if len(children) < 2:
+            raise ChacanaParseError("Symmetrization requires at least two indices")
         indices: list[ChacanaIndex] = children[1]
         return _SymGroup(indices=indices, kind="sym")
 
     def visit_anti_symmetrization(self, node: Any, children: Any) -> _SymGroup:
         _check_variance_delimiters(children, "anti-symmetrization")
+        if len(children) < 2:
+            raise ChacanaParseError("Anti-symmetrization requires at least two indices")
         return _SymGroup(indices=children[1], kind="antisym")
 
     def visit_index(self, node: Any, children: Any) -> ChacanaIndex:
@@ -192,7 +196,8 @@ class ChacanaVisitor(PTNodeVisitor):
             is_deriv = True
             deriv_type = "Semicolon" if dtype == ";" else "Comma"
             return _build_index(variance_str, name, is_deriv, deriv_type)
-        assert isinstance(idx_node, str)
+        if not isinstance(idx_node, str):
+            raise ChacanaParseError(f"Expected index name (string), got {type(idx_node).__name__}")
         return _build_index(variance_str, idx_node)
 
     def visit_derivative(self, node: Any, children: Any) -> tuple[str, str]:
