@@ -5,6 +5,7 @@ import pytest
 from chacana.ast import Variance
 from chacana.context import (
     load_context,
+    load_context_file,
 )
 from chacana.errors import ChacanaError
 
@@ -69,7 +70,7 @@ manifold = "M"
 rank = 2
 index_pattern = ["Contra", "Covar"]
 """)
-        ctx = load_context(str(toml_file))
+        ctx = load_context_file(str(toml_file))
         assert ctx.manifolds["M"].dimension == 3
 
     def test_empty_context(self):
@@ -423,7 +424,7 @@ manifold = "M"
 rank = 2
 index_pattern = ["Contra", "Covar"]
 """)
-        ctx = load_context(Path(toml_file))
+        ctx = load_context_file(Path(toml_file))
         assert "M" in ctx.manifolds
         assert "T" in ctx.tensors
 
@@ -432,4 +433,4 @@ index_pattern = ["Contra", "Covar"]
         from pathlib import Path
 
         with pytest.raises(ChacanaError, match="not found"):
-            load_context(Path("/nonexistent/file.toml"))
+            load_context_file(Path("/nonexistent/file.toml"))

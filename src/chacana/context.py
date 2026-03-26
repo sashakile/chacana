@@ -5,6 +5,7 @@ from __future__ import annotations
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -111,20 +112,8 @@ def _validate_context(ctx: GlobalContext) -> None:
             raise ChacanaError(f"perturbation {name!r} references unknown manifold {p.manifold!r}")
 
 
-def load_context(source: str | Path) -> GlobalContext:
-    """Load a GlobalContext from a TOML file path or string."""
-    if isinstance(source, Path):
-        try:
-            with open(source, "rb") as f:
-                data = tomllib.load(f)
-        except FileNotFoundError as e:
-            raise ChacanaError(f"Context file not found: {source}") from e
-    elif "\n" not in source and Path(source).is_file():
-        with open(source, "rb") as f:
-            data = tomllib.load(f)
-    else:
-        data = tomllib.loads(source)
-
+def _build_context(data: dict[str, Any]) -> GlobalContext:
+    """Build a GlobalContext from parsed TOML data."""
     ctx = GlobalContext()
 
     # Load strategy (preserve all keys)
@@ -176,3 +165,39 @@ def load_context(source: str | Path) -> GlobalContext:
     _validate_context(ctx)
 
     return ctx
+
+
+def load_context_file(path: str | Path) -> GlobalContext:
+    """Load a GlobalContext from a TOML file."""
+    try:
+        with open(path, "rb") as f:
+            data = tomllib.load(f)
+    except FileNotFoundError as e:
+        raise ChacanaError(f"Context file not found: {path}") from e
+    return _build_context(data)
+
+
+def load_context_string(toml_string: str) -> GlobalContext:
+    """Load a GlobalContext from a TOML string."""
+    return _build_context(tomllib.loads(toml_string))
+
+
+def load_context(source: str | Path) -> GlobalContext:
+    """Load a GlobalContext from a TOML file path or string.
+
+    Prefer :func:`load_context_file` or :func:`load_context_string` for
+    unambiguous loading.
+    """
+    import warnings
+
+    if isinstance(source, Path):
+        return load_context_file(source)
+    if "\n" not in source and Path(source).is_file():
+        warnings.warn(
+            "load_context() auto-detected a file path from a string argument. "
+            "Use load_context_file() instead for explicit file loading.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return load_context_file(source)
+    return load_context_string(source)

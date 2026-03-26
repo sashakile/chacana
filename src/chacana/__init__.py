@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from chacana.checker import check
-from chacana.context import GlobalContext, load_context
+from chacana.context import GlobalContext, load_context, load_context_file, load_context_string
 from chacana.errors import ChacanaParseError, ChacanaTypeError
 from chacana.grammar import normalize_input, parse_and_validate
 from chacana.visitor import parse_to_ast
@@ -16,6 +16,8 @@ __all__ = [
     "parse",
     "check",
     "load_context",
+    "load_context_file",
+    "load_context_string",
     "GlobalContext",
     "ChacanaParseError",
     "ChacanaTypeError",
