@@ -207,6 +207,10 @@ def wedge_expr() -> Any:
     return factor, ZeroOrMore("^", factor)
 
 
+def negate_expr() -> Any:
+    return "-", factor
+
+
 def factor() -> Any:
     return [
         (functional_op, Optional("{", index_list, "}")),
@@ -215,6 +219,7 @@ def factor() -> Any:
         perturbation,
         commutator,
         ("(", sum_expr, ")"),
+        negate_expr,
     ]
 
 

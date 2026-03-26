@@ -189,6 +189,18 @@ class TestGrammarAccepts:
         assert token.head == "ExteriorDerivative"
         assert token.args == []
 
+    def test_unary_negation(self, parser):
+        """Leading minus: -T{^a _b}"""
+        token = parse_to_ast(parser.parse("-T{^a _b}"))
+        assert token.head == "Negate"
+        assert token.args[0].head == "T"
+
+    def test_unary_negation_in_expression(self, parser):
+        """A + -B should parse as Add(A, Negate(B))."""
+        token = parse_to_ast(parser.parse("A + -B"))
+        assert token.head == "Add"
+        assert token.args[1].head == "Negate"
+
 
 class TestGrammarRejects:
     def test_invalid_variance(self, parser):

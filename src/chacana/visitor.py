@@ -114,6 +114,9 @@ class ChacanaVisitor(PTNodeVisitor):
             return terms[0]
         return ValidationToken(head=HEAD_WEDGE, args=terms)
 
+    def visit_negate_expr(self, node: Any, children: Any) -> ValidationToken:
+        return ValidationToken(head=HEAD_NEGATE, args=[children[0]])
+
     def visit_factor(self, node: Any, children: Any) -> Any:
         if len(children) > 1 and isinstance(children[0], ValidationToken):
             # functional_op with indices

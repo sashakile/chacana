@@ -25,7 +25,8 @@ module.exports = grammar({
 
   rules: {
     // ── Entry point ────────────────────────────────────────────────
-    source_file: $ => $._expression,
+    // Supports multiple expressions separated by newlines.
+    source_file: $ => repeat($._expression),
 
     _expression: $ => choice(
       $.sum_expression,
@@ -53,6 +54,9 @@ module.exports = grammar({
       field('right', $._expression),
     )),
 
+    // ── Unary negation ─────────────────────────────────────────────
+    negate_expression: $ => prec(1, seq('-', $._primary)),
+
     // ── Primary expressions ────────────────────────────────────────
     _primary: $ => choice(
       $.functional_op,
@@ -61,6 +65,7 @@ module.exports = grammar({
       $.perturbation,
       $.commutator,
       $.paren_expression,
+      $.negate_expression,
     ),
 
     // Known operator keywords for functional operators.
