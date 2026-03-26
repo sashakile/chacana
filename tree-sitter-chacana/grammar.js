@@ -44,7 +44,7 @@ module.exports = grammar({
 
     product_expression: $ => prec.left(2, seq(
       field('left', $._expression),
-      field('operator', '*'),
+      field('operator', choice('*', '/')),
       field('right', $._expression),
     )),
 

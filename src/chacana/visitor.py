@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import gcd
 from typing import Any
 
 from arpeggio import PTNodeVisitor, visit_parse_tree
@@ -11,6 +12,7 @@ from chacana.ast import (
     HEAD_ADD,
     HEAD_COMMUTATOR,
     HEAD_DETERMINANT,
+    HEAD_DIVIDE,
     HEAD_EXTERIOR_DERIVATIVE,
     HEAD_HODGE_STAR,
     HEAD_INTERIOR_PRODUCT,
@@ -20,6 +22,7 @@ from chacana.ast import (
     HEAD_NEGATE,
     HEAD_NUMBER,
     HEAD_PERTURBATION,
+    HEAD_RATIONAL,
     HEAD_TRACE,
     HEAD_WEDGE,
     ChacanaIndex,
@@ -80,6 +83,41 @@ def _build_index(
     )
 
 
+def _extract_numeric(token: ValidationToken) -> int | None:
+    """Extract an integer value from a Number or Negate(Number) token."""
+    if token.head == HEAD_NUMBER and token.value is not None:
+        v = token.value
+        if v == int(v):
+            return int(v)
+        return None
+    if token.head == HEAD_NEGATE and len(token.args) == 1:
+        inner = _extract_numeric(token.args[0])
+        return -inner if inner is not None else None
+    return None
+
+
+def _make_division(num: ValidationToken, den: ValidationToken) -> ValidationToken:
+    """Build a Divide or Rational token, reducing when both sides are integers."""
+    n = _extract_numeric(num)
+    d = _extract_numeric(den)
+    if n is not None and d is not None and d != 0:
+        # Sign hoisting: denominator always positive
+        if d < 0:
+            n, d = -n, -d
+        g = gcd(abs(n), d)
+        n, d = n // g, d // g
+        if d == 1:
+            return ValidationToken(head=HEAD_NUMBER, value=float(n))
+        return ValidationToken(
+            head=HEAD_RATIONAL,
+            args=[
+                ValidationToken(head=HEAD_NUMBER, value=float(n)),
+                ValidationToken(head=HEAD_NUMBER, value=float(d)),
+            ],
+        )
+    return ValidationToken(head=HEAD_DIVIDE, args=[num, den])
+
+
 class ChacanaVisitor(PTNodeVisitor):
     def visit_expression(self, node: Any, children: Any) -> Any:
         return children[0]
@@ -103,10 +141,25 @@ class ChacanaVisitor(PTNodeVisitor):
         return ValidationToken(head=HEAD_ADD, args=terms)
 
     def visit_product_expr(self, node: Any, children: Any) -> Any:
-        terms = [c for c in children if not (isinstance(c, str) and c == "*")]
+        terms: list[ValidationToken] = []
+        ops: list[str] = []
+        for c in children:
+            if isinstance(c, str) and c in ("*", "/"):
+                ops.append(c)
+            else:
+                terms.append(c)
         if len(terms) == 1:
             return terms[0]
-        return ValidationToken(head=HEAD_MULTIPLY, args=terms)
+        # Build left-to-right, flattening consecutive multiplications
+        result = terms[0]
+        for op, term in zip(ops, terms[1:], strict=False):
+            if op == "/":
+                result = _make_division(result, term)
+            elif result.head == HEAD_MULTIPLY:
+                result.args.append(term)
+            else:
+                result = ValidationToken(head=HEAD_MULTIPLY, args=[result, term])
+        return result
 
     def visit_wedge_expr(self, node: Any, children: Any) -> Any:
         terms = [c for c in children if not (isinstance(c, str) and c == "^")]

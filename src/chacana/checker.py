@@ -11,6 +11,7 @@ from collections.abc import Callable
 from chacana.ast import (
     HEAD_ADD,
     HEAD_DETERMINANT,
+    HEAD_DIVIDE,
     HEAD_HODGE_STAR,
     HEAD_INTERIOR_PRODUCT,
     HEAD_INVERSE,
@@ -18,6 +19,7 @@ from chacana.ast import (
     HEAD_MULTIPLY,
     HEAD_NEGATE,
     HEAD_NUMBER,
+    HEAD_RATIONAL,
     HEAD_TRACE,
     HEAD_WEDGE,
     ChacanaIndex,
@@ -39,7 +41,7 @@ def _check_contraction(token: ValidationToken, ctx: GlobalContext | None) -> Non
 def _check_contraction_with(
     token: ValidationToken, ctx: GlobalContext | None, analyzer: IndexAnalyzer
 ) -> None:
-    if token.head in (HEAD_MULTIPLY, HEAD_WEDGE):
+    if token.head in (HEAD_MULTIPLY, HEAD_WEDGE, HEAD_DIVIDE):
         all_indices: list[ChacanaIndex] = []
         for arg in token.args:
             _check_contraction_with(arg, ctx, analyzer)
@@ -55,8 +57,9 @@ def _check_contraction_with(
                         f"Contraction index '{label}' has mismatched index type: "
                         f"{group[0].index_type.value} vs {group[1].index_type.value}"
                     )
-                # Variance check only for Multiply (wedge doesn't contract).
-                if token.head == HEAD_MULTIPLY and group[0].variance == group[1].variance:
+                # Variance check for Multiply/Divide (wedge doesn't contract).
+                is_product = token.head in (HEAD_MULTIPLY, HEAD_DIVIDE)
+                if is_product and group[0].variance == group[1].variance:
                     if ctx and ctx.active_metric:
                         continue
                     raise ChacanaTypeError(
@@ -147,7 +150,17 @@ def _check_symmetry_single(token: ValidationToken, ctx: GlobalContext | None) ->
                     )
 
 
-_STRUCTURAL_HEADS = frozenset({HEAD_ADD, HEAD_MULTIPLY, HEAD_WEDGE, HEAD_NEGATE, HEAD_NUMBER})
+_STRUCTURAL_HEADS = frozenset(
+    {
+        HEAD_ADD,
+        HEAD_MULTIPLY,
+        HEAD_WEDGE,
+        HEAD_NEGATE,
+        HEAD_NUMBER,
+        HEAD_DIVIDE,
+        HEAD_RATIONAL,
+    }
+)
 
 
 def _check_rank(token: ValidationToken, ctx: GlobalContext) -> None:

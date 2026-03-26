@@ -160,6 +160,48 @@ class TestGrammarAccepts:
         assert len(token.indices) == 3
         assert token.indices[2].is_derivative
 
+    def test_division_simple(self, parser):
+        """A / B should produce a Divide node."""
+        token = parse_to_ast(parser.parse("A / B"))
+        assert token.head == "Divide"
+        assert len(token.args) == 2
+        assert token.args[0].head == "A"
+        assert token.args[1].head == "B"
+
+    def test_division_rational_reduction(self, parser):
+        """1 / 2 should produce a canonical Rational node."""
+        token = parse_to_ast(parser.parse("1 / 2"))
+        assert token.head == "Rational"
+        assert token.args[0].value == 1
+        assert token.args[1].value == 2
+
+    def test_division_rational_gcd(self, parser):
+        """4 / 6 should reduce to 2/3."""
+        token = parse_to_ast(parser.parse("4 / 6"))
+        assert token.head == "Rational"
+        assert token.args[0].value == 2
+        assert token.args[1].value == 3
+
+    def test_division_rational_sign_hoisting(self, parser):
+        """1 / -2 should hoist the sign to the numerator."""
+        token = parse_to_ast(parser.parse("1 / -2"))
+        assert token.head == "Rational"
+        assert token.args[0].value == -1
+        assert token.args[1].value == 2
+
+    def test_division_integer_result(self, parser):
+        """6 / 3 should reduce to Number(2)."""
+        token = parse_to_ast(parser.parse("6 / 3"))
+        assert token.head == "Number"
+        assert token.value == 2
+
+    def test_division_scalar_coefficient(self, parser):
+        """1 / 2 * T{^a} should work as (1/2) * T."""
+        token = parse_to_ast(parser.parse("1 / 2 * T{^a}"))
+        assert token.head == "Multiply"
+        assert token.args[0].head == "Rational"
+        assert token.args[1].head == "T"
+
     def test_scalar_multiplication(self, parser):
         token = parse_to_ast(parser.parse("3 * T{^a _b}"))
         assert token.head == "Multiply"

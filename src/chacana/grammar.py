@@ -200,7 +200,7 @@ def sum_expr() -> Any:
 
 
 def product_expr() -> Any:
-    return wedge_expr, ZeroOrMore("*", wedge_expr)
+    return wedge_expr, ZeroOrMore(["*", "/"], wedge_expr)
 
 
 def wedge_expr() -> Any:

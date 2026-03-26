@@ -10,10 +10,12 @@ from collections import Counter
 
 from chacana.ast import (
     HEAD_ADD,
+    HEAD_DIVIDE,
     HEAD_EXTERIOR_DERIVATIVE,
     HEAD_MULTIPLY,
     HEAD_NEGATE,
     HEAD_NUMBER,
+    HEAD_RATIONAL,
     HEAD_WEDGE,
     ChacanaIndex,
     ValidationToken,
@@ -46,7 +48,7 @@ class IndexAnalyzer:
         if token.head == HEAD_NEGATE:
             return self.free_indices(token.args[0]) if token.args else []
 
-        if token.head == HEAD_MULTIPLY:
+        if token.head in (HEAD_MULTIPLY, HEAD_DIVIDE):
             all_idx: list[ChacanaIndex] = []
             for arg in token.args:
                 all_idx.extend(self.free_indices(arg))
@@ -61,7 +63,7 @@ class IndexAnalyzer:
         if token.head == HEAD_EXTERIOR_DERIVATIVE:
             return self.free_indices(token.args[0]) if token.args else []
 
-        if token.head == HEAD_NUMBER:
+        if token.head in (HEAD_NUMBER, HEAD_RATIONAL):
             return []
 
         # Leaf tensor or expression with indices.
@@ -87,20 +89,20 @@ class IndexAnalyzer:
         if token.head == HEAD_NEGATE:
             return self.all_indices(token.args[0]) if token.args else []
 
-        if token.head in (HEAD_MULTIPLY, HEAD_WEDGE):
+        if token.head in (HEAD_MULTIPLY, HEAD_WEDGE, HEAD_DIVIDE):
             result: list[ChacanaIndex] = []
             for arg in token.args:
                 result.extend(self.all_indices(arg))
             return result
 
-        if token.head == HEAD_NUMBER:
+        if token.head in (HEAD_NUMBER, HEAD_RATIONAL):
             return []
 
         return list(token.indices)
 
     def contracted_pairs(self, token: ValidationToken) -> list[tuple[ChacanaIndex, ChacanaIndex]]:
         """Return explicitly contracted index pairs found in *token*."""
-        if token.head == HEAD_MULTIPLY:
+        if token.head in (HEAD_MULTIPLY, HEAD_DIVIDE):
             all_idx: list[ChacanaIndex] = []
             for arg in token.args:
                 all_idx.extend(self.free_indices(arg))

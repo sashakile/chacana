@@ -34,6 +34,8 @@ HEAD_HODGE_STAR = "HodgeStar"
 HEAD_INTERIOR_PRODUCT = "InteriorProduct"
 HEAD_PERTURBATION = "Perturbation"
 HEAD_COMMUTATOR = "Commutator"
+HEAD_DIVIDE = "Divide"
+HEAD_RATIONAL = "Rational"
 
 
 @dataclass(frozen=True)
