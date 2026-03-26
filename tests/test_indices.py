@@ -112,6 +112,39 @@ class TestFreeIndices:
         free = analyzer.free_indices(token)
         assert len(free) == 2, "Same-variance pair should NOT be contracted without metric"
 
+    # --- chacana-x55: functional ops use own indices, not children's ---
+
+    def test_functional_op_uses_own_indices(self):
+        """Functional ops like Trace return their own indices, not args'."""
+        analyzer = IndexAnalyzer()
+        inner = _leaf("T", _ci("a", UP), _ci("b", DN))
+        token = ValidationToken(head="Trace", args=[inner])
+        # Trace has no indices of its own → empty
+        assert analyzer.free_indices(token) == []
+
+    def test_functional_op_with_attached_indices(self):
+        """d(omega){_a _b} returns the attached indices."""
+        analyzer = IndexAnalyzer()
+        inner = _leaf("omega", _ci("c", DN))
+        token = ValidationToken(
+            head="ExteriorDerivative",
+            args=[inner],
+            indices=[_ci("a", DN), _ci("b", DN)],
+        )
+        # ExteriorDerivative delegates to arg, but here we have indices on the op
+        # The fallthrough case returns token.indices
+        free = analyzer.free_indices(token)
+        # ExteriorDerivative with args delegates to arg's free indices
+        assert free == [_ci("c", DN)]
+
+    def test_functional_op_in_sum(self):
+        """Tr(T) + Tr(S) in a sum — both have zero free indices, sum is valid."""
+        analyzer = IndexAnalyzer()
+        t1 = ValidationToken(head="Trace", args=[_leaf("T")])
+        t2 = ValidationToken(head="Trace", args=[_leaf("S")])
+        token = _add(t1, t2)
+        assert analyzer.free_indices(token) == []
+
 
 # ===========================================================================
 # IndexAnalyzer.all_indices

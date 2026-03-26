@@ -26,8 +26,7 @@ A +
   (sum_expression
     left: (tensor_expr
       name: (identifier))
-    right: (scalar
-      (MISSING float))))
+    right: (MISSING scalar)))
 
 ================================================================================
 ERROR: Malformed operator missing operand

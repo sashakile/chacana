@@ -265,8 +265,7 @@ Scalar multiplication
 
 (source_file
   (product_expression
-    left: (scalar
-      (integer))
+    left: (scalar)
     right: (tensor_expr
       name: (identifier)
       indices: (index_block
@@ -288,8 +287,7 @@ Scalar times single-index tensor
 
 (source_file
   (product_expression
-    left: (scalar
-      (integer))
+    left: (scalar)
     right: (tensor_expr
       name: (identifier)
       indices: (index_block
@@ -309,8 +307,7 @@ Float scalar in expression
 (source_file
   (sum_expression
     left: (product_expression
-      left: (scalar
-        (float))
+      left: (scalar)
       right: (tensor_expr
         name: (identifier)
         indices: (index_block
@@ -322,8 +319,7 @@ Float scalar in expression
               variance: (variance_marker)
               name: (identifier))))))
     right: (product_expression
-      left: (scalar
-        (integer))
+      left: (scalar)
       right: (tensor_expr
         name: (identifier)
         indices: (index_block

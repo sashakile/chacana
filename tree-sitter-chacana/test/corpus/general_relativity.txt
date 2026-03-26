@@ -229,8 +229,7 @@ R{_a _b} - (1 * R) * g{_a _b}
     right: (product_expression
       left: (paren_expression
         (product_expression
-          left: (scalar
-            (integer))
+          left: (scalar)
           right: (tensor_expr
             name: (identifier))))
       right: (tensor_expr
@@ -331,8 +330,7 @@ R * R - 4 * R{_a _b} * R{^a ^b} + R{_a _b _c _d} * R{^a ^b ^c ^d}
           name: (identifier)))
       right: (product_expression
         left: (product_expression
-          left: (scalar
-            (integer))
+          left: (scalar)
           right: (tensor_expr
             name: (identifier)
             indices: (index_block

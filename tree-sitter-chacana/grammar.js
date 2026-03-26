@@ -89,10 +89,10 @@ module.exports = grammar({
     ),
 
     // ── Scalar literals ────────────────────────────────────────────
-    scalar: $ => choice($.float, $.integer),
+    // Single rule per PEG spec: [0-9]+ ('.' [0-9]+)?
+    scalar: $ => /[0-9]+(\.[0-9]+)?/,
 
-    float: $ => /[0-9]+\.[0-9]+/,
-
+    // Integer-only (used by perturbation order, not scalar literals).
     integer: $ => /[0-9]+/,
 
     // ── Index system ───────────────────────────────────────────────

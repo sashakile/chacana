@@ -33,7 +33,7 @@
   type: _ @operator)
 
 ; Numeric literals
-(float) @number.float
+(scalar) @number
 (integer) @number
 
 ; Perturbation
