@@ -35,7 +35,9 @@ const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 
 let parser: TreeSitterType | null = null;
-const trees = new Map<string, Tree>();
+
+/** Per-document storage: URI → (lineIndex → parsed tree). */
+const docTrees = new Map<string, Map<number, Tree>>();
 
 // ── Initialization ─────────────────────────────────────────────────
 
@@ -64,7 +66,11 @@ documents.onDidChangeContent((change) => {
 });
 
 documents.onDidClose((event) => {
-  trees.delete(event.document.uri);
+  const lineTrees = docTrees.get(event.document.uri);
+  if (lineTrees) {
+    for (const tree of lineTrees.values()) tree.delete();
+    docTrees.delete(event.document.uri);
+  }
   connection.sendDiagnostics({ uri: event.document.uri, diagnostics: [] });
 });
 
@@ -75,14 +81,19 @@ function validateDocument(doc: TextDocument): void {
   const diagnostics: Diagnostic[] = [];
   const resolved = resolveContext(doc.uri, source);
 
+  const oldLineTrees = docTrees.get(doc.uri);
+  const newLineTrees = new Map<number, Tree>();
+
   const lines = source.split("\n");
   for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
     const raw = lines[lineIdx];
     const stripped = raw.trim();
     if (!stripped || stripped.startsWith("#")) continue;
 
-    const tree = parse(parser, raw);
-    trees.set(`${doc.uri}:${lineIdx}`, tree);
+    // Reuse previous tree for incremental parsing when available.
+    const oldTree = oldLineTrees?.get(lineIdx);
+    const tree = parse(parser, raw, oldTree);
+    newLineTrees.set(lineIdx, tree);
 
     // Layer 1: syntax errors from tree-sitter
     const syntaxErrors = extractSyntaxErrors(tree.rootNode);
@@ -119,6 +130,14 @@ function validateDocument(doc: TextDocument): void {
     }
   }
 
+  // Clean up old trees that are no longer present, then store new set.
+  if (oldLineTrees) {
+    for (const [idx, tree] of oldLineTrees) {
+      if (!newLineTrees.has(idx)) tree.delete();
+    }
+  }
+  docTrees.set(doc.uri, newLineTrees);
+
   connection.sendDiagnostics({ uri: doc.uri, diagnostics });
 }
 
@@ -129,12 +148,13 @@ connection.onHover((params: TextDocumentPositionParams): Hover | null => {
   const doc = documents.get(params.textDocument.uri);
   if (!doc) return null;
 
-  const lines = doc.getText().split("\n");
   const lineIdx = params.position.line;
+  const lines = doc.getText().split("\n");
   const raw = lines[lineIdx];
   if (!raw || raw.trim().startsWith("#")) return null;
 
-  const tree = parse(parser, raw);
+  // Reuse cached tree from last validation, or parse fresh.
+  const tree = docTrees.get(doc.uri)?.get(lineIdx) ?? parse(parser, raw);
   const resolved = resolveContext(doc.uri, doc.getText());
   const content = getHover(
     tree.rootNode,
@@ -156,12 +176,13 @@ connection.onDefinition((params: DefinitionParams): Location | null => {
   const doc = documents.get(params.textDocument.uri);
   if (!doc) return null;
 
-  const lines = doc.getText().split("\n");
   const lineIdx = params.position.line;
+  const lines = doc.getText().split("\n");
   const raw = lines[lineIdx];
   if (!raw || raw.trim().startsWith("#")) return null;
 
-  const tree = parse(parser, raw);
+  // Reuse cached tree from last validation, or parse fresh.
+  const tree = docTrees.get(doc.uri)?.get(lineIdx) ?? parse(parser, raw);
   const resolved = resolveContext(doc.uri, doc.getText());
   const def = getDefinition(
     tree.rootNode,
