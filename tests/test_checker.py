@@ -11,7 +11,7 @@ from tests.helpers import make_token as _make_token
 class TestContraction:
     def test_valid_contraction(self, contraction_context):
         token = _make_token("A{_a} * B{^a}")
-        check(token, contraction_context)  # should not raise
+        assert check(token, contraction_context) is token
 
     def test_same_variance_contraction_fails(self):
         token = ValidationToken(
@@ -37,7 +37,7 @@ class TestContraction:
     def test_metric_aware_contraction(self, metric_context):
         # A{_a} * B{_a} is allowed if active_metric is defined
         token = _make_token("A{_a} * B{_a}")
-        check(token, metric_context)  # should not raise
+        assert check(token, metric_context) is token
 
 
 class TestWedge:
@@ -55,7 +55,7 @@ class TestWedge:
 class TestFreeIndexInvariance:
     def test_matching_free_indices(self, basic_context):
         token = _make_token("A{^a} + B{^a}")
-        check(token, basic_context)  # should not raise
+        assert check(token, basic_context) is token
 
     def test_mismatched_variance_in_sum(self):
         token = ValidationToken(
@@ -103,7 +103,7 @@ class TestFreeIndexInvariance:
 class TestRankCheck:
     def test_correct_rank(self, basic_context):
         token = _make_token("R{^a _b _c _d}")
-        check(token, basic_context)  # should not raise
+        assert check(token, basic_context) is token
 
     def test_wrong_rank(self, basic_context):
         token = ValidationToken(
@@ -179,7 +179,7 @@ class TestContractionIndexType:
                 ),
             ],
         )
-        check(token)  # should not raise
+        assert check(token) is token
 
     def test_greek_greek_contraction_succeeds(self):
         """Two Greek indices with same label and opposite variance contract."""
@@ -200,7 +200,7 @@ class TestContractionIndexType:
                 ),
             ],
         )
-        check(token)  # should not raise
+        assert check(token) is token
 
     def test_index_type_mismatch_error_message(self):
         """Error message should mention index type mismatch."""
@@ -258,7 +258,7 @@ class TestSymmetryValidation:
     def test_symmetrized_indices_same_variance_passes(self):
         """T{_( a b _)} with matching variance and type should pass."""
         token = _make_token("T{_( a b _)}")
-        check(token)  # should not raise
+        assert check(token) is token
 
     def test_symmetrized_indices_mixed_variance_fails(self):
         """T{_( a ^b _)} — mixed variance in symmetrization must fail."""
@@ -297,7 +297,7 @@ class TestSymmetryValidation:
             ],
             metadata=TokenMetadata(antisymmetrized_groups=[[0, 1]]),
         )
-        check(token)  # should not raise
+        assert check(token) is token
 
     def test_anti_symmetrized_indices_mixed_variance_fails(self):
         """Mixed variance in anti-symmetrization must fail."""
@@ -610,7 +610,7 @@ class TestNodeTypeRecursion:
             ],
         )
         token = ValidationToken(head="ExteriorDerivative", args=[inner])
-        check(token)  # should not raise
+        assert check(token) is token
 
     def test_free_index_check_in_nested_sum(self):
         """Free index invariance checked in sum nested inside product."""
@@ -658,7 +658,7 @@ class TestNegate:
     def test_negate_free_indices(self):
         """Negate(A{^a}) should have the same free indices as A{^a}."""
         token = _make_token("A{^a} - B{^a}")
-        check(token)  # should not raise — free indices match
+        assert check(token) is token
 
     def test_negate_preserves_contraction_check(self):
         """Subtraction with mismatched free indices should still fail."""
@@ -695,9 +695,9 @@ class TestEmptyArgsFunctionalOp:
     def test_d_empty_args_no_crash(self):
         """d() should not crash when type-checked."""
         token = _make_token("d()")
-        check(token)  # should not raise or crash
+        assert check(token) is token
 
     def test_d_empty_args_with_context(self, basic_context):
         """d() with context should not crash."""
         token = _make_token("d()")
-        check(token, basic_context)  # should not crash
+        assert check(token, basic_context) is token

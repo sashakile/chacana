@@ -7,6 +7,7 @@ from arpeggio import NoMatch
 
 from chacana.errors import ChacanaParseError
 from chacana.grammar import create_parser, normalize_input
+from chacana.visitor import parse_to_ast
 
 
 @pytest.fixture
@@ -16,162 +17,177 @@ def parser():
 
 class TestGrammarAccepts:
     def test_simple_tensor(self, parser):
-        result = parser.parse("R{^a _b _c _d}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("R{^a _b _c _d}"))
+        assert token.head == "R"
+        assert len(token.indices) == 4
 
     def test_bare_identifier(self, parser):
-        result = parser.parse("A")
-        assert result is not None
+        token = parse_to_ast(parser.parse("A"))
+        assert token.head == "A"
+        assert token.indices == []
 
     def test_sum(self, parser):
-        result = parser.parse("A + B")
-        assert result is not None
+        token = parse_to_ast(parser.parse("A + B"))
+        assert token.head == "Add"
+        assert len(token.args) == 2
 
     def test_sum_with_indices(self, parser):
-        result = parser.parse("A{^a} + B{^a}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("A{^a} + B{^a}"))
+        assert token.head == "Add"
+        assert token.args[0].head == "A"
 
     def test_product(self, parser):
-        result = parser.parse("A * B")
-        assert result is not None
+        token = parse_to_ast(parser.parse("A * B"))
+        assert token.head == "Multiply"
+        assert len(token.args) == 2
 
     def test_product_with_indices(self, parser):
-        result = parser.parse("A{_a} * B{^a}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("A{_a} * B{^a}"))
+        assert token.head == "Multiply"
+        assert len(token.args[0].indices) == 1
 
     def test_scalar(self, parser):
-        result = parser.parse("42")
-        assert result is not None
+        token = parse_to_ast(parser.parse("42"))
+        assert token.head == "Number"
+        assert token.value == 42.0
 
     def test_scalar_float(self, parser):
-        result = parser.parse("3.14")
-        assert result is not None
+        token = parse_to_ast(parser.parse("3.14"))
+        assert token.head == "Number"
+        assert token.value == pytest.approx(3.14)
 
     def test_parenthesized(self, parser):
-        result = parser.parse("(A + B)")
-        assert result is not None
+        token = parse_to_ast(parser.parse("(A + B)"))
+        assert token.head == "Add"
 
     def test_rank2_tensor(self, parser):
-        result = parser.parse("T{^a _b}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("T{^a _b}"))
+        assert token.head == "T"
+        assert len(token.indices) == 2
 
     def test_greek_indices(self, parser):
-        result = parser.parse("T{^α _β}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("T{^α _β}"))
+        assert token.head == "T"
+        assert token.indices[0].label == "α"
 
     def test_wedge(self, parser):
-        result = parser.parse("A ^ B")
-        assert result is not None
+        token = parse_to_ast(parser.parse("A ^ B"))
+        assert token.head == "Wedge"
+        assert len(token.args) == 2
 
     def test_functional_op(self, parser):
-        result = parser.parse("d(omega)")
-        assert result is not None
+        token = parse_to_ast(parser.parse("d(omega)"))
+        assert token.head == "ExteriorDerivative"
+        assert len(token.args) == 1
 
     def test_functional_op_multiple_args(self, parser):
-        result = parser.parse("L(X, T)")
-        assert result is not None
+        token = parse_to_ast(parser.parse("L(X, T)"))
+        assert token.head == "LieDerivative"
+        assert len(token.args) == 2
 
     def test_symmetrization(self, parser):
-        result = parser.parse("T{_( a b _)}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("T{_( a b _)}"))
+        assert token.head == "T"
+        assert len(token.metadata.symmetrized_groups) == 1
 
     def test_anti_symmetrization(self, parser):
-        result = parser.parse("T{_[ a b _]}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("T{_[ a b _]}"))
+        assert token.head == "T"
+        assert len(token.metadata.antisymmetrized_groups) == 1
 
     def test_derivatives(self, parser):
-        result = parser.parse("T{;a ,b}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("T{;a ,b}"))
+        assert token.head == "T"
+        assert token.indices[0].is_derivative
+        assert token.indices[1].is_derivative
 
     def test_complex_expression(self, parser):
-        result = parser.parse("d(A ^ B){_a _b _c} + L(X, T){_a _b _c}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("d(A ^ B){_a _b _c} + L(X, T){_a _b _c}"))
+        assert token.head == "Add"
+        assert token.args[0].head == "ExteriorDerivative"
+        assert token.args[1].head == "LieDerivative"
 
     def test_perturbation(self, parser):
-        result = parser.parse("@2(A + B)")
-        assert result is not None
+        token = parse_to_ast(parser.parse("@2(A + B)"))
+        assert token.head == "Perturbation"
+        assert token.metadata.order == 2
 
-    # --- New spec scenario tests ---
+    # --- Spec scenario tests ---
 
     def test_functional_op_lie_derivative_with_tensor_arg(self, parser):
-        """Spec scenario: L(X, T{^a _b})"""
-        result = parser.parse("L(X, T{^a _b})")
-        assert result is not None
+        token = parse_to_ast(parser.parse("L(X, T{^a _b})"))
+        assert token.head == "LieDerivative"
+        assert token.args[1].head == "T"
 
     def test_functional_op_trace(self, parser):
-        """Spec scenario: Tr(T)"""
-        result = parser.parse("Tr(T)")
-        assert result is not None
+        token = parse_to_ast(parser.parse("Tr(T)"))
+        assert token.head == "Trace"
 
     def test_functional_op_determinant(self, parser):
-        """Spec scenario: det(g)"""
-        result = parser.parse("det(g)")
-        assert result is not None
+        token = parse_to_ast(parser.parse("det(g)"))
+        assert token.head == "Determinant"
 
     def test_functional_op_inverse(self, parser):
-        """Spec scenario: inv(M)"""
-        result = parser.parse("inv(M)")
-        assert result is not None
+        token = parse_to_ast(parser.parse("inv(M)"))
+        assert token.head == "Inverse"
 
     def test_functional_op_exterior_derivative_of_wedge(self, parser):
-        """Spec scenario: d(A ^ B)"""
-        result = parser.parse("d(A ^ B)")
-        assert result is not None
+        token = parse_to_ast(parser.parse("d(A ^ B)"))
+        assert token.head == "ExteriorDerivative"
+        assert token.args[0].head == "Wedge"
 
     def test_commutator(self, parser):
-        """Spec scenario: [A, B]"""
-        result = parser.parse("[A, B]")
-        assert result is not None
+        token = parse_to_ast(parser.parse("[A, B]"))
+        assert token.head == "Commutator"
+        assert len(token.args) == 2
 
     def test_commutator_complex(self, parser):
-        """Commutator with more complex sub-expressions."""
-        result = parser.parse("[A + B, C * D]")
-        assert result is not None
+        token = parse_to_ast(parser.parse("[A + B, C * D]"))
+        assert token.head == "Commutator"
+        assert token.args[0].head == "Add"
+        assert token.args[1].head == "Multiply"
 
     def test_contravariant_symmetrization(self, parser):
-        """Symmetrization with contravariant indices."""
-        result = parser.parse("T{^( a b ^)}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("T{^( a b ^)}"))
+        assert len(token.metadata.symmetrized_groups) == 1
 
     def test_contravariant_anti_symmetrization(self, parser):
-        """Anti-symmetrization with contravariant indices."""
-        result = parser.parse("T{^[ a b ^]}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("T{^[ a b ^]}"))
+        assert len(token.metadata.antisymmetrized_groups) == 1
 
     def test_mixed_indices_and_derivatives(self, parser):
-        """Tensor with mixed indices and derivatives."""
-        result = parser.parse("T{^a _b ;c}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("T{^a _b ;c}"))
+        assert len(token.indices) == 3
+        assert token.indices[2].is_derivative
 
     def test_scalar_multiplication(self, parser):
-        """Scalar times tensor."""
-        result = parser.parse("3 * T{^a _b}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("3 * T{^a _b}"))
+        assert token.head == "Multiply"
+        assert token.args[0].head == "Number"
 
     def test_subtraction(self, parser):
-        """Subtraction of tensors."""
-        result = parser.parse("A{^a} - B{^a}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("A{^a} - B{^a}"))
+        assert token.head == "Add"
+        assert token.args[1].head == "Negate"
 
     def test_nested_parentheses(self, parser):
-        """Nested parenthesized expressions."""
-        result = parser.parse("((A + B) * C)")
-        assert result is not None
+        token = parse_to_ast(parser.parse("((A + B) * C)"))
+        assert token.head == "Multiply"
 
     def test_perturbation_higher_order(self, parser):
-        """Higher-order perturbation."""
-        result = parser.parse("@3(g{_a _b})")
-        assert result is not None
+        token = parse_to_ast(parser.parse("@3(g{_a _b})"))
+        assert token.head == "Perturbation"
+        assert token.metadata.order == 3
 
     def test_functional_op_with_indices(self, parser):
-        """Functional operator result with indices attached."""
-        result = parser.parse("d(omega){_a _b}")
-        assert result is not None
+        token = parse_to_ast(parser.parse("d(omega){_a _b}"))
+        assert token.head == "ExteriorDerivative"
+        assert len(token.indices) == 2
 
     def test_empty_functional_op(self, parser):
-        """d() is valid per grammar: Optional(sum_expr, ...)."""
-        result = parser.parse("d()")
-        assert result is not None
+        token = parse_to_ast(parser.parse("d()"))
+        assert token.head == "ExteriorDerivative"
+        assert token.args == []
 
 
 class TestGrammarRejects:

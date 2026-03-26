@@ -201,11 +201,10 @@ class TestTrace:
         token = _make_token("Tr(T)")
         check(token, diffgeom_context)
 
-    def test_trace_covariant_only_fails(self, diffgeom_context):
-        """Tr(g{_a _b}) — purely covariant tensor, should fail without metric."""
-        # With active_metric, metric contraction is possible, so this is OK.
-        # But with no_metric_context, pure covariant tensor trace is ill-defined.
-        pass  # covered by no_metric test below
+    def test_trace_covariant_with_metric_passes(self, diffgeom_context):
+        """Tr(g{_a _b}) — covariant tensor is OK with active_metric."""
+        token = _make_token("Tr(g{_a _b})")
+        assert check(token, diffgeom_context) is token
 
     def test_trace_rank0_fails(self, diffgeom_context):
         """Tr(f) where f is rank 0 — trace needs at least rank 2."""
