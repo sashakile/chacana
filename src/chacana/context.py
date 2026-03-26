@@ -65,9 +65,10 @@ class GlobalContext:
 
 
 def _parse_variance(s: str) -> Variance:
-    if s in ("Contra", "contra"):
+    low = s.lower()
+    if low == "contra":
         return Variance.CONTRA
-    if s in ("Covar", "covar"):
+    if low == "covar":
         return Variance.COVAR
     raise ChacanaError(f"Unknown variance: {s!r}")
 

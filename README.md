@@ -71,9 +71,9 @@ ruff format src/ tests/
 
 A [Tree-sitter grammar](tree-sitter-chacana/) is included for IDE integration:
 
-- **Syntax highlighting** via `queries/highlights.scm`
-- **Real-time validation** via `queries/validation.scm` (index extraction, variance consistency, derivative identification)
-- **TOML injection** via `contrib/toml-injections.scm` for Chacana expressions inside TOML context files
+- **Syntax highlighting** via `tree-sitter-chacana/queries/highlights.scm`
+- **Real-time validation** via `tree-sitter-chacana/queries/validation.scm` (index extraction, variance consistency, derivative identification)
+- **TOML injection** via `tree-sitter-chacana/contrib/toml-injections.scm` for Chacana expressions inside TOML context files
 - **WASM build** for browser-based parsing (8 KB)
 - File extension: `.chcn`
 
