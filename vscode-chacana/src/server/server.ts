@@ -36,8 +36,8 @@ const documents = new TextDocuments(TextDocument);
 
 let parser: TreeSitterType | null = null;
 
-/** Per-document storage: URI → (lineIndex → parsed tree). */
-const docTrees = new Map<string, Map<number, Tree>>();
+/** Per-document storage: URI → full document tree. */
+const docTrees = new Map<string, Tree>();
 
 // ── Initialization ─────────────────────────────────────────────────
 
@@ -66,9 +66,9 @@ documents.onDidChangeContent((change) => {
 });
 
 documents.onDidClose((event) => {
-  const lineTrees = docTrees.get(event.document.uri);
-  if (lineTrees) {
-    for (const tree of lineTrees.values()) tree.delete();
+  const tree = docTrees.get(event.document.uri);
+  if (tree) {
+    tree.delete();
     docTrees.delete(event.document.uri);
   }
   connection.sendDiagnostics({ uri: event.document.uri, diagnostics: [] });
@@ -81,45 +81,44 @@ function validateDocument(doc: TextDocument): void {
   const diagnostics: Diagnostic[] = [];
   const resolved = resolveContext(doc.uri, source);
 
-  const oldLineTrees = docTrees.get(doc.uri);
-  const newLineTrees = new Map<number, Tree>();
+  // Parse the whole document at once (supports multi-line expressions).
+  const oldTree = docTrees.get(doc.uri);
+  const tree = parse(parser, source, oldTree);
+  oldTree?.delete();
+  docTrees.set(doc.uri, tree);
 
-  const lines = source.split("\n");
-  for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-    const raw = lines[lineIdx];
-    const stripped = raw.trim();
-    if (!stripped || stripped.startsWith("#")) continue;
+  // Layer 1: syntax errors from tree-sitter
+  const syntaxErrors = extractSyntaxErrors(tree.rootNode);
+  for (const err of syntaxErrors) {
+    diagnostics.push({
+      severity: DiagnosticSeverity.Error,
+      range: {
+        start: { line: err.startLine, character: err.startColumn },
+        end: { line: err.endLine, character: err.endColumn },
+      },
+      message: err.message,
+      source: "chacana",
+    });
+  }
 
-    // Reuse previous tree for incremental parsing when available.
-    const oldTree = oldLineTrees?.get(lineIdx);
-    const tree = parse(parser, raw, oldTree);
-    newLineTrees.set(lineIdx, tree);
-
-    // Layer 1: syntax errors from tree-sitter
-    const syntaxErrors = extractSyntaxErrors(tree.rootNode);
-    for (const err of syntaxErrors) {
-      diagnostics.push({
-        severity: DiagnosticSeverity.Error,
-        range: {
-          start: { line: lineIdx, character: err.startColumn },
-          end: { line: lineIdx, character: err.endColumn },
-        },
-        message: err.message,
-        source: "chacana",
-      });
-    }
-
-    // Layer 2: type checker (only when syntax is clean)
-    if (syntaxErrors.length === 0) {
-      const ast = buildAST(tree.rootNode);
+  // Layer 2: type checker per expression (only when syntax is clean)
+  if (syntaxErrors.length === 0) {
+    for (const child of tree.rootNode.namedChildren) {
+      const ast = buildAST(child);
       if (ast) {
         const checkerDiags = checkAll(ast, resolved?.ctx ?? null);
         for (const d of checkerDiags) {
           diagnostics.push({
             severity: DiagnosticSeverity.Error,
             range: {
-              start: { line: lineIdx, character: d.range?.startColumn ?? 0 },
-              end: { line: lineIdx, character: d.range?.endColumn ?? raw.length },
+              start: {
+                line: d.range?.startLine ?? child.startPosition.row,
+                character: d.range?.startColumn ?? 0,
+              },
+              end: {
+                line: d.range?.endLine ?? child.endPosition.row,
+                character: d.range?.endColumn ?? child.endPosition.column,
+              },
             },
             message: d.message,
             source: "chacana",
@@ -129,14 +128,6 @@ function validateDocument(doc: TextDocument): void {
       }
     }
   }
-
-  // Clean up old trees that are no longer present, then store new set.
-  if (oldLineTrees) {
-    for (const [idx, tree] of oldLineTrees) {
-      if (!newLineTrees.has(idx)) tree.delete();
-    }
-  }
-  docTrees.set(doc.uri, newLineTrees);
 
   connection.sendDiagnostics({ uri: doc.uri, diagnostics });
 }
@@ -148,17 +139,11 @@ connection.onHover((params: TextDocumentPositionParams): Hover | null => {
   const doc = documents.get(params.textDocument.uri);
   if (!doc) return null;
 
-  const lineIdx = params.position.line;
-  const lines = doc.getText().split("\n");
-  const raw = lines[lineIdx];
-  if (!raw || raw.trim().startsWith("#")) return null;
-
-  // Reuse cached tree from last validation, or parse fresh.
-  const tree = docTrees.get(doc.uri)?.get(lineIdx) ?? parse(parser, raw);
+  const tree = docTrees.get(doc.uri) ?? parse(parser, doc.getText());
   const resolved = resolveContext(doc.uri, doc.getText());
   const content = getHover(
     tree.rootNode,
-    0, // parsed single line, so row is always 0
+    params.position.line,
     params.position.character,
     resolved?.ctx ?? null,
   );
@@ -176,17 +161,11 @@ connection.onDefinition((params: DefinitionParams): Location | null => {
   const doc = documents.get(params.textDocument.uri);
   if (!doc) return null;
 
-  const lineIdx = params.position.line;
-  const lines = doc.getText().split("\n");
-  const raw = lines[lineIdx];
-  if (!raw || raw.trim().startsWith("#")) return null;
-
-  // Reuse cached tree from last validation, or parse fresh.
-  const tree = docTrees.get(doc.uri)?.get(lineIdx) ?? parse(parser, raw);
+  const tree = docTrees.get(doc.uri) ?? parse(parser, doc.getText());
   const resolved = resolveContext(doc.uri, doc.getText());
   const def = getDefinition(
     tree.rootNode,
-    0,
+    params.position.line,
     params.position.character,
     resolved?.tomlPath ?? null,
     resolved?.tensorLines ?? null,

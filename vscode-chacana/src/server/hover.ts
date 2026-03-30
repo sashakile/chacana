@@ -47,18 +47,17 @@ export function getHover(
   ctx: GlobalContext | null,
 ): string | null {
   const node = nodeAtPosition(root, line, column);
-  if (!node || node.type !== "identifier") return null;
+  if (!node) return null;
 
   const name = node.text;
   const parent = node.parent;
 
-  // Functional operator hover
-  if (parent?.type === "functional_op") {
-    const fieldName = parent.childForFieldName("name");
-    if (fieldName && sameNode(fieldName, node) && OPERATOR_DOCS[name]) {
-      return OPERATOR_DOCS[name];
-    }
+  // Functional operator hover (operator_keyword node inside functional_op)
+  if (node.type === "operator_keyword" && parent?.type === "functional_op") {
+    if (OPERATOR_DOCS[name]) return OPERATOR_DOCS[name];
   }
+
+  if (node.type !== "identifier") return null;
 
   // Tensor hover (from context)
   if (ctx && parent?.type === "tensor_expr") {

@@ -111,4 +111,17 @@ describe("syntax error extraction", () => {
     const tree = parse(parser, "Γ{^α _β _γ}");
     expect(extractSyntaxErrors(tree.rootNode)).toHaveLength(0);
   });
+
+  it("returns no errors for multi-line document", () => {
+    const tree = parse(parser, "A{^a _b}\nB{^c _d}\nC + D");
+    expect(extractSyntaxErrors(tree.rootNode)).toHaveLength(0);
+  });
+
+  it("reports correct line for error in multi-line document", () => {
+    const tree = parse(parser, "A{^a _b}\nR{}\nC + D");
+    const errors = extractSyntaxErrors(tree.rootNode);
+    expect(errors.length).toBeGreaterThan(0);
+    // The error should be on line 1 (0-indexed), where "R{}" is
+    expect(errors[0].startLine).toBe(1);
+  });
 });

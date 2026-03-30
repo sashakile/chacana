@@ -178,4 +178,28 @@ describe("astBuilder", () => {
     // Should return null, not crash
     expect(() => buildAST(tree.rootNode)).not.toThrow();
   });
+
+  it("builds AST for each expression in a multi-line document", () => {
+    const tree = parse(parser, "A{^a _b}\nB + C\nD * E");
+    const children = tree.rootNode.namedChildren;
+    expect(children).toHaveLength(3);
+
+    const ast0 = buildAST(children[0]);
+    expect(ast0?.head).toBe("A");
+    expect(ast0?.indices).toHaveLength(2);
+
+    const ast1 = buildAST(children[1]);
+    expect(ast1?.head).toBe(HEAD_ADD);
+
+    const ast2 = buildAST(children[2]);
+    expect(ast2?.head).toBe(HEAD_MULTIPLY);
+  });
+
+  it("preserves correct line positions in multi-line document", () => {
+    const tree = parse(parser, "A\nB\nC");
+    const children = tree.rootNode.namedChildren;
+    expect(children[0].startPosition.row).toBe(0);
+    expect(children[1].startPosition.row).toBe(1);
+    expect(children[2].startPosition.row).toBe(2);
+  });
 });

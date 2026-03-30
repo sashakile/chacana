@@ -87,4 +87,12 @@ describe("hover provider", () => {
     // Should return null, not throw
     expect(() => getHover(tree.rootNode, 0, 999, ctx)).not.toThrow();
   });
+
+  it("returns hover info for tensor on second line of multi-line doc", () => {
+    const tree = parse(parser, "A + B\ng{_a _b}");
+    // Hover on 'g' at line 1, col 0
+    const h = getHover(tree.rootNode, 1, 0, ctx);
+    expect(h).toContain("**g**");
+    expect(h).toContain("Rank: 2");
+  });
 });
