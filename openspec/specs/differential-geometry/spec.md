@@ -97,6 +97,11 @@ The DSL SHALL allow derivatives and indices to be attached to arbitrary expressi
 - **WHEN** the expression `(A{_a} * B{_b}){;c}` is parsed
 - **THEN** it MUST be represented as a derivative operator acting on the product node.
 
+#### Scenario: Covariant derivative does not affect rank
+- **GIVEN** a tensor `R` declared with rank 4 and index pattern `[Contra, Covar, Covar, Covar]`
+- **WHEN** the expression `R{^a _b _c _d ;e}` is type-checked
+- **THEN** the derivative index `;e` MUST NOT be counted toward the tensor's rank. The rank check compares only the 4 non-derivative indices against the declared rank 4.
+
 #### Scenario: Invalid index attachment
 - **GIVEN** a tensor `A`
 - **WHEN** an index block is attached to a literal number, e.g., `5{_a}`

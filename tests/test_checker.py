@@ -129,6 +129,34 @@ class TestRankCheck:
         with pytest.raises(ChacanaTypeError, match="index 0.*expected Contra.*got Covar"):
             check(token, basic_context)
 
+    def test_derivative_index_not_counted_in_rank(self, basic_context):
+        """Covariant derivative ;e should not count toward tensor rank."""
+        token = ValidationToken(
+            head="R",
+            indices=[
+                ChacanaIndex("a", Variance.CONTRA),
+                ChacanaIndex("b", Variance.COVAR),
+                ChacanaIndex("c", Variance.COVAR),
+                ChacanaIndex("d", Variance.COVAR),
+                ChacanaIndex("e", Variance.COVAR, is_derivative=True, derivative_type="Semicolon"),
+            ],
+        )
+        assert check(token, basic_context) is token
+
+    def test_derivative_index_not_checked_against_pattern(self, basic_context):
+        """Derivative indices should not misalign the variance pattern check."""
+        token = ValidationToken(
+            head="R",
+            indices=[
+                ChacanaIndex("a", Variance.CONTRA),
+                ChacanaIndex("b", Variance.COVAR),
+                ChacanaIndex("c", Variance.COVAR),
+                ChacanaIndex("d", Variance.COVAR),
+                ChacanaIndex("e", Variance.CONTRA, is_derivative=True, derivative_type="Comma"),
+            ],
+        )
+        assert check(token, basic_context) is token
+
 
 # ---------------------------------------------------------------------------
 # Rule 1 completion: index_type check in contraction

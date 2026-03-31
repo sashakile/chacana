@@ -343,19 +343,22 @@ function checkRank(
     const decl = ctx.tensors.get(t.head);
     if (!decl) continue;
 
-    if (t.indices.length > 0 && t.indices.length !== decl.rank) {
+    // Derivative indices (;e, ,a) are not part of the tensor's intrinsic rank
+    const tensorIndices = t.indices.filter(idx => !idx.isDerivative);
+
+    if (tensorIndices.length > 0 && tensorIndices.length !== decl.rank) {
       diags.push({
-        message: `Tensor '${t.head}' declared with rank ${decl.rank}, but used with ${t.indices.length} indices`,
+        message: `Tensor '${t.head}' declared with rank ${decl.rank}, but used with ${tensorIndices.length} indices`,
         range: t.range,
         code: "chacana/rank",
       });
     }
 
-    if (t.indices.length > 0 && decl.indexPattern.length > 0) {
-      for (let i = 0; i < Math.min(t.indices.length, decl.indexPattern.length); i++) {
-        if (t.indices[i].variance !== decl.indexPattern[i]) {
+    if (tensorIndices.length > 0 && decl.indexPattern.length > 0) {
+      for (let i = 0; i < Math.min(tensorIndices.length, decl.indexPattern.length); i++) {
+        if (tensorIndices[i].variance !== decl.indexPattern[i]) {
           diags.push({
-            message: `Tensor '${t.head}' index ${i}: expected ${decl.indexPattern[i]}, got ${t.indices[i].variance}`,
+            message: `Tensor '${t.head}' index ${i}: expected ${decl.indexPattern[i]}, got ${tensorIndices[i].variance}`,
             range: t.range,
             code: "chacana/rank",
           });

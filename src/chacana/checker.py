@@ -171,14 +171,16 @@ def _check_rank(token: ValidationToken, ctx: GlobalContext) -> None:
         decl = ctx.tensors.get(t.head)
         if decl is None:
             continue
-        if t.indices and len(t.indices) != decl.rank:
+        # Derivative indices (;e, ,a) are not part of the tensor's intrinsic rank
+        tensor_indices = [idx for idx in t.indices if not idx.is_derivative]
+        if tensor_indices and len(tensor_indices) != decl.rank:
             raise ChacanaTypeError(
                 f"Tensor '{t.head}' declared with rank {decl.rank}, "
-                f"but used with {len(t.indices)} indices"
+                f"but used with {len(tensor_indices)} indices"
             )
-        if t.indices and decl.index_pattern:
+        if tensor_indices and decl.index_pattern:
             for i, (actual, expected) in enumerate(
-                zip(t.indices, decl.index_pattern, strict=False)
+                zip(tensor_indices, decl.index_pattern, strict=False)
             ):
                 if actual.variance != expected:
                     raise ChacanaTypeError(
