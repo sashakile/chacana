@@ -1563,14 +1563,29 @@ async function loadChecker() {
   var copyBtn = document.getElementById('ctx-copy-btn');
   copyBtn.addEventListener('click', function() {
     var toml = buildTOML();
-    navigator.clipboard.writeText(toml).then(function() {
+    var done = function() {
       copyBtn.textContent = 'Copied!';
       copyBtn.classList.add('copied');
       setTimeout(function() {
         copyBtn.textContent = 'Copy TOML';
         copyBtn.classList.remove('copied');
       }, 1500);
-    });
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(toml).then(done).catch(fallback);
+    } else {
+      fallback();
+    }
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = toml;
+      ta.style.cssText = 'position:fixed;left:-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      done();
+    }
   });
 
   exprInput.addEventListener('input', update);
