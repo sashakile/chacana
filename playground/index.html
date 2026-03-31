@@ -1026,6 +1026,7 @@
 .hl-opkw     { color: #2563eb; font-weight: 600; }
 .hl-variance { color: #d97706; font-weight: 600; }
 .hl-number   { color: #059669; font-weight: 600; }
+.hl-deriv    { color: #ea580c; font-weight: 700; font-style: italic; }
 .hl-punct    { opacity: 0.45; }
 .hl-error    { color: #dc2626; background: #dc262615;
   text-decoration: wavy underline #dc2626; text-underline-offset: 0.2em; }
@@ -1035,6 +1036,7 @@
 [data-md-color-scheme="slate"] .hl-opkw     { color: #60a5fa; }
 [data-md-color-scheme="slate"] .hl-variance { color: #fbbf24; }
 [data-md-color-scheme="slate"] .hl-number   { color: #34d399; }
+[data-md-color-scheme="slate"] .hl-deriv    { color: #fb923c; }
 
 /* Diagnostics */
 #diagnostics-output {
@@ -1301,7 +1303,8 @@ async function loadChecker() {
     if (node.isNamed) {
       if (node.type === 'identifier') {
         if (pt === 'tensor_expr') return 'hl-tensor';
-        if (pt === 'index' || pt === 'derivative') return 'hl-index';
+        if (pt === 'derivative') return 'hl-deriv';
+        if (pt === 'index') return 'hl-index';
         return 'hl-tensor';
       }
       if (node.type === 'operator_keyword') return 'hl-opkw';
@@ -1313,7 +1316,7 @@ async function loadChecker() {
     if (t === '+' || t === '-' || t === '*' || t === '/' || t === '@') return 'hl-op';
     if (t === '^' && pt === 'wedge_expression') return 'hl-op';
     if (t === '^' || t === '_') return 'hl-variance';
-    if ((t === ';' || t === ',') && pt === 'derivative') return 'hl-op';
+    if ((t === ';' || t === ',') && pt === 'derivative') return 'hl-deriv';
     if ('{},()[]'.indexOf(t) !== -1) return 'hl-punct';
     return '';
   }
