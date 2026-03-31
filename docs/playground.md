@@ -232,14 +232,14 @@ Type a Chacana tensor expression and see it validated in real time.
       <button class="example-chip" data-expr="R{^a _b _c _d}">Riemann</button>
       <button class="example-chip" data-expr="d(omega){_a _b}">Exterior deriv.</button>
       <button class="example-chip" data-expr="L(X, g{_a _b})">Lie derivative</button>
-      <button class="example-chip" data-expr="T{_( a b _)}">Symmetrization</button>
+      <button class="example-chip" data-expr="T{_( a b _)}" data-ctx="[]">Symmetrization</button>
       <button class="example-chip" data-expr="@2(g{_a _b})">Perturbation</button>
       <button class="example-chip" data-expr="[A, B]">Commutator</button>
       <button class="example-chip" data-expr="R{^a _b _c _d} + R{^a _c _d _b} + R{^a _d _b _c}">Bianchi</button>
-      <button class="example-chip" data-expr="R * R - 4 * R{_a _b} * R{^a ^b} + R{_a _b _c _d} * R{^a ^b ^c ^d}">Gauss-Bonnet</button>
+      <button class="example-chip" data-expr="R * R - 4 * R{_a _b} * R{^a ^b} + R{_a _b _c _d} * R{^a ^b ^c ^d}" data-ctx="[]">Gauss-Bonnet</button>
       <button class="example-chip" data-expr="Tr(T{^a _b})">Trace</button>
       <button class="example-chip" data-expr="det(g)">Determinant</button>
-      <button class="example-chip" data-expr="star(F)">Hodge star</button>
+      <button class="example-chip" data-expr="star(F)" data-ctx="[]">Hodge star</button>
       <button class="example-chip" data-expr="R{^a _b _c _d ;e}">Cov. deriv.</button>
     </div>
     <details class="ctx-section" id="ctx-details">
@@ -315,7 +315,7 @@ async function loadChecker() {
     tensors: [
       { name: 'R', pattern: ['Contra', 'Covar', 'Covar', 'Covar'] },
       { name: 'T', pattern: ['Contra', 'Covar'] },
-      { name: 'g', pattern: ['Covar', 'Covar'] }
+      { name: 'g', pattern: ['Contra', 'Contra'] }
     ]
   };
 
@@ -634,10 +634,20 @@ async function loadChecker() {
 
   exprInput.addEventListener('input', update);
 
+  var defaultTensors = JSON.parse(JSON.stringify(ctxState.tensors));
+
   var chips = document.querySelectorAll('.example-chip');
   for (var i = 0; i < chips.length; i++) {
     chips[i].addEventListener('click', function() {
       exprInput.value = this.getAttribute('data-expr');
+      var ctxAttr = this.getAttribute('data-ctx');
+      if (ctxAttr !== null) {
+        ctxState.tensors = JSON.parse(ctxAttr);
+        renderTensors();
+      } else if (JSON.stringify(ctxState.tensors) === '[]') {
+        ctxState.tensors = JSON.parse(JSON.stringify(defaultTensors));
+        renderTensors();
+      }
       update();
       exprInput.focus();
     });
