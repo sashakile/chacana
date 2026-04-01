@@ -4,6 +4,7 @@ import pytest
 
 from chacana.ast import ChacanaIndex, IndexType, TokenMetadata, ValidationToken, Variance
 from chacana.checker import check
+from chacana.context import load_context
 from chacana.errors import ChacanaTypeError
 from tests.helpers import make_token as _make_token
 
@@ -156,6 +157,51 @@ class TestRankCheck:
             ],
         )
         assert check(token, basic_context) is token
+
+    def test_variance_mismatch_tolerated_with_active_metric(self):
+        """With active_metric, R{_a _b _c _d} should pass even though
+        declared pattern is [Contra, Covar, Covar, Covar]."""
+        ctx = load_context("""
+[strategy]
+active_metric = "g"
+
+[manifold.M]
+dimension = 4
+
+[tensor.g]
+manifold = "M"
+rank = 2
+index_pattern = ["Covar", "Covar"]
+
+[tensor.R]
+manifold = "M"
+rank = 4
+index_pattern = ["Contra", "Covar", "Covar", "Covar"]
+""")
+        token = ValidationToken(
+            head="R",
+            indices=[
+                ChacanaIndex("a", Variance.COVAR),
+                ChacanaIndex("b", Variance.COVAR),
+                ChacanaIndex("c", Variance.COVAR),
+                ChacanaIndex("d", Variance.COVAR),
+            ],
+        )
+        assert check(token, ctx) is token
+
+    def test_variance_mismatch_still_fails_without_active_metric(self, basic_context):
+        """Without active_metric, R{_a _b _c _d} must still fail."""
+        token = ValidationToken(
+            head="R",
+            indices=[
+                ChacanaIndex("a", Variance.COVAR),
+                ChacanaIndex("b", Variance.COVAR),
+                ChacanaIndex("c", Variance.COVAR),
+                ChacanaIndex("d", Variance.COVAR),
+            ],
+        )
+        with pytest.raises(ChacanaTypeError, match="index 0.*expected Contra.*got Covar"):
+            check(token, basic_context)
 
 
 # ---------------------------------------------------------------------------

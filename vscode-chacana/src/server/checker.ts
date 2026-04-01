@@ -354,7 +354,7 @@ function checkRank(
       });
     }
 
-    if (tensorIndices.length > 0 && decl.indexPattern.length > 0) {
+    if (tensorIndices.length > 0 && decl.indexPattern.length > 0 && !ctx.activeMetric) {
       for (let i = 0; i < Math.min(tensorIndices.length, decl.indexPattern.length); i++) {
         if (tensorIndices[i].variance !== decl.indexPattern[i]) {
           diags.push({

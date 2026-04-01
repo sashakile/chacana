@@ -178,7 +178,7 @@ def _check_rank(token: ValidationToken, ctx: GlobalContext) -> None:
                 f"Tensor '{t.head}' declared with rank {decl.rank}, "
                 f"but used with {len(tensor_indices)} indices"
             )
-        if tensor_indices and decl.index_pattern:
+        if tensor_indices and decl.index_pattern and not ctx.active_metric:
             for i, (actual, expected) in enumerate(
                 zip(tensor_indices, decl.index_pattern, strict=False)
             ):
