@@ -205,6 +205,90 @@ index_pattern = ["Contra", "Covar", "Covar", "Covar"]
 
 
 # ---------------------------------------------------------------------------
+# Rule 4: Rank polymorphism (implicit contraction with active_metric)
+# ---------------------------------------------------------------------------
+
+
+class TestRankPolymorphism:
+    """With active_metric, a tensor may be used with fewer indices when
+    the difference is even (each missing pair = implicit trace)."""
+
+    @pytest.fixture
+    def riemann_metric_ctx(self):
+        return load_context("""
+[strategy]
+active_metric = "g"
+
+[manifold.M]
+dimension = 4
+
+[tensor.g]
+manifold = "M"
+rank = 2
+index_pattern = ["Covar", "Covar"]
+
+[tensor.R]
+manifold = "M"
+rank = 4
+index_pattern = ["Contra", "Covar", "Covar", "Covar"]
+""")
+
+    def test_rank4_used_as_rank2_with_metric(self, riemann_metric_ctx):
+        """R{_a _b} (Ricci) from rank-4 Riemann with active_metric."""
+        token = ValidationToken(
+            head="R",
+            indices=[
+                ChacanaIndex("a", Variance.COVAR),
+                ChacanaIndex("b", Variance.COVAR),
+            ],
+        )
+        assert check(token, riemann_metric_ctx) is token
+
+    def test_rank4_used_as_rank0_with_metric(self, riemann_metric_ctx):
+        """R (scalar curvature) from rank-4 Riemann with active_metric."""
+        token = ValidationToken(head="R", indices=[])
+        assert check(token, riemann_metric_ctx) is token
+
+    def test_rank4_used_as_rank4_with_metric(self, riemann_metric_ctx):
+        """R{_a _b _c _d} full Riemann — exact rank still works."""
+        token = ValidationToken(
+            head="R",
+            indices=[
+                ChacanaIndex("a", Variance.COVAR),
+                ChacanaIndex("b", Variance.COVAR),
+                ChacanaIndex("c", Variance.COVAR),
+                ChacanaIndex("d", Variance.COVAR),
+            ],
+        )
+        assert check(token, riemann_metric_ctx) is token
+
+    def test_odd_rank_difference_rejected_with_metric(self, riemann_metric_ctx):
+        """R{_a _b _c} — odd difference (4-3=1) must fail even with metric."""
+        token = ValidationToken(
+            head="R",
+            indices=[
+                ChacanaIndex("a", Variance.COVAR),
+                ChacanaIndex("b", Variance.COVAR),
+                ChacanaIndex("c", Variance.COVAR),
+            ],
+        )
+        with pytest.raises(ChacanaTypeError, match="rank 4.*3 indices"):
+            check(token, riemann_metric_ctx)
+
+    def test_rank_polymorphism_rejected_without_metric(self, basic_context):
+        """R{_a _b} from rank-4 without active_metric must fail."""
+        token = ValidationToken(
+            head="R",
+            indices=[
+                ChacanaIndex("a", Variance.COVAR),
+                ChacanaIndex("b", Variance.COVAR),
+            ],
+        )
+        with pytest.raises(ChacanaTypeError, match="rank 4.*2 indices"):
+            check(token, basic_context)
+
+
+# ---------------------------------------------------------------------------
 # Rule 1 completion: index_type check in contraction
 # ---------------------------------------------------------------------------
 

@@ -347,11 +347,14 @@ function checkRank(
     const tensorIndices = t.indices.filter(idx => !idx.isDerivative);
 
     if (tensorIndices.length > 0 && tensorIndices.length !== decl.rank) {
-      diags.push({
-        message: `Tensor '${t.head}' declared with rank ${decl.rank}, but used with ${tensorIndices.length} indices`,
-        range: t.range,
-        code: "chacana/rank",
-      });
+      const diff = decl.rank - tensorIndices.length;
+      if (!(ctx.activeMetric && diff > 0 && diff % 2 === 0)) {
+        diags.push({
+          message: `Tensor '${t.head}' declared with rank ${decl.rank}, but used with ${tensorIndices.length} indices`,
+          range: t.range,
+          code: "chacana/rank",
+        });
+      }
     }
 
     if (tensorIndices.length > 0 && decl.indexPattern.length > 0 && !ctx.activeMetric) {

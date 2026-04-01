@@ -174,10 +174,12 @@ def _check_rank(token: ValidationToken, ctx: GlobalContext) -> None:
         # Derivative indices (;e, ,a) are not part of the tensor's intrinsic rank
         tensor_indices = [idx for idx in t.indices if not idx.is_derivative]
         if tensor_indices and len(tensor_indices) != decl.rank:
-            raise ChacanaTypeError(
-                f"Tensor '{t.head}' declared with rank {decl.rank}, "
-                f"but used with {len(tensor_indices)} indices"
-            )
+            diff = decl.rank - len(tensor_indices)
+            if not (ctx.active_metric and diff > 0 and diff % 2 == 0):
+                raise ChacanaTypeError(
+                    f"Tensor '{t.head}' declared with rank {decl.rank}, "
+                    f"but used with {len(tensor_indices)} indices"
+                )
         if tensor_indices and decl.index_pattern and not ctx.active_metric:
             for i, (actual, expected) in enumerate(
                 zip(tensor_indices, decl.index_pattern, strict=False)
