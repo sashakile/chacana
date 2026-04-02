@@ -48,6 +48,7 @@ nav:
       - chacana.checker: api/checker.md
       - chacana.visitor: api/visitor.md
       - chacana.errors: api/errors.md
+      - LaTeX Transpiler: api/latex.md
   - Playground: playground.md
   - Development: development.md
 

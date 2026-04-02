@@ -21,9 +21,9 @@
 - [x] 4.5 Update `docs/playground.md` JS to handle LaTeX rendering and importing
 
 ## 5. Documentation
-- [ ] 5.1 Document `toLatex` / `fromLatex` API usage in `docs/`
+- [x] 5.1 Document `toLatex` / `fromLatex` API usage in `docs/`
 
 ## 6. Verification
-- [ ] 6.1 Validate the change proposal: `openspec validate add-latex-transpiler --strict`
+- [x] 6.1 Validate the change proposal: `openspec validate add-latex-transpiler --strict`
 - [ ] 6.2 Manually verify the playground functionality in a browser
-- [ ] 6.3 Create a follow-up issue for the Python `to_latex` implementation
+- [x] 6.3 Create a follow-up issue for the Python `to_latex` implementation
