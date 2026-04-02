@@ -9,9 +9,9 @@
 - [x] 2.3 Verify: `npm run test` in `vscode-chacana`
 
 ## 3. Core Implementation — `fromLatex`
-- [ ] 3.1 Write failing tests for `fromLatex` in `vscode-chacana/test/unit/latex.test.ts`
-- [ ] 3.2 Implement `fromLatex` in `vscode-chacana/src/server/latex.ts` to pass tests
-- [ ] 3.3 Verify: `npm run test` in `vscode-chacana`
+- [x] 3.1 Write failing tests for `fromLatex` in `vscode-chacana/test/unit/latex.test.ts`
+- [x] 3.2 Implement `fromLatex` in `vscode-chacana/src/server/latex.ts` to pass tests
+- [x] 3.3 Verify: `npm run test` in `vscode-chacana`
 
 ## 4. Playground Integration
 - [ ] 4.1 Export `toLatex` and `fromLatex` from `vscode-chacana/src/browser/index.ts`

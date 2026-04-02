@@ -19,7 +19,7 @@ import {
   type ChacanaIndex,
   type TokenMetadata,
 } from "../../src/server/ast.js";
-import { toLatex } from "../../src/server/latex.js";
+import { toLatex, fromLatex } from "../../src/server/latex.js";
 
 // --- helpers ---
 
@@ -191,5 +191,129 @@ describe("toLatex", () => {
   it("transforms a bare number", () => {
     const num = makeToken(HEAD_NUMBER, [], [], 42);
     expect(toLatex(num)).toBe("42");
+  });
+});
+
+// --- fromLatex tests ---
+
+describe("fromLatex", () => {
+  it("imports basic tensor notation preserving positional order", () => {
+    const result = fromLatex("R_{abc}^{d}");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("R{_a _b _c ^d}");
+    }
+  });
+
+  it("imports tensor with superscript first", () => {
+    const result = fromLatex("T^{a}{}_{b}");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("T{^a _b}");
+    }
+  });
+
+  it("imports staggered indices", () => {
+    const result = fromLatex("R^{a}{}_{b}{}^{c}{}_{d}");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("R{^a _b ^c _d}");
+    }
+  });
+
+  it("imports Greek LaTeX commands as Unicode", () => {
+    const result = fromLatex("T^{\\alpha}{}_{\\beta}");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("T{^α _β}");
+    }
+  });
+
+  it("imports basic arithmetic with operator normalization", () => {
+    const result = fromLatex("A + B \\cdot C");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("A + B * C");
+    }
+  });
+
+  it("normalizes \\times to *", () => {
+    const result = fromLatex("A \\times B");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("A * B");
+    }
+  });
+
+  it("imports scalar identifiers without indices", () => {
+    const result = fromLatex("x");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("x");
+    }
+  });
+
+  it("imports \\omega as Unicode ω", () => {
+    const result = fromLatex("\\omega");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("ω");
+    }
+  });
+
+  it("strips \\left and \\right delimiters", () => {
+    const result = fromLatex("\\left( A + B \\right)");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("(A + B)");
+    }
+  });
+
+  it("returns error for unsupported \\frac", () => {
+    const result = fromLatex("\\frac{1}{2} R_{abcd}");
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain("frac");
+    }
+  });
+
+  it("returns error for \\sqrt", () => {
+    const result = fromLatex("\\sqrt{x}");
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error).toContain("sqrt");
+    }
+  });
+
+  it("imports \\wedge operator", () => {
+    const result = fromLatex("A \\wedge B");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("A ^ B");
+    }
+  });
+
+  it("imports \\det operator", () => {
+    const result = fromLatex("\\det(g_{ab})");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("det(g{_a _b})");
+    }
+  });
+
+  it("imports \\mathcal{L} as Lie derivative", () => {
+    const result = fromLatex("\\mathcal{L}_{X} g_{ab}");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("L(X, g{_a _b})");
+    }
+  });
+
+  it("imports \\star operator", () => {
+    const result = fromLatex("\\star(\\omega)");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("star(ω)");
+    }
   });
 });

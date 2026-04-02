@@ -105,6 +105,118 @@ function renderIndices(token: ValidationToken): string {
   return result;
 }
 
+export type FromLatexResult =
+  | { ok: true; value: string }
+  | { ok: false; error: string; partial?: string };
+
+/** LaTeX command → Unicode Greek mapping (inverse of GREEK_TO_LATEX). */
+const LATEX_TO_GREEK: Record<string, string> = {};
+for (const [unicode, latex] of Object.entries(GREEK_TO_LATEX)) {
+  LATEX_TO_GREEK[latex] = unicode;
+}
+
+/** Unsupported LaTeX structural commands that should trigger an error. */
+const UNSUPPORTED_COMMANDS = new Set([
+  "\\frac", "\\sqrt", "\\sum", "\\int", "\\prod", "\\lim",
+]);
+
+/** LaTeX operator → Chacana operator mapping. */
+const LATEX_OP_TO_CHACANA: Record<string, string> = {
+  "\\cdot": "*",
+  "\\times": "*",
+  "\\wedge": "^",
+  "\\star": "star",
+  "\\det": "det",
+  "\\operatorname{Tr}": "Tr",
+  "\\iota": "i",
+};
+
+function latexToGreek(s: string): string {
+  return s.replace(/\\(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega)\b/g,
+    (match) => LATEX_TO_GREEK[match] ?? match);
+}
+
+export function fromLatex(input: string): FromLatexResult {
+  // Check for unsupported commands first
+  for (const cmd of UNSUPPORTED_COMMANDS) {
+    if (input.includes(cmd)) {
+      const name = cmd.slice(1); // remove backslash
+      return { ok: false, error: `Unsupported LaTeX command: ${name}` };
+    }
+  }
+
+  let s = input;
+
+  // Strip \left and \right, keep the delimiter
+  s = s.replace(/\\left\s*/g, "");
+  s = s.replace(/\\right\s*/g, "");
+
+  // Handle \mathcal{L}_{...} <body> → L(..., <body>)
+  s = s.replace(/\\mathcal\{L\}_\{([^}]+)\}\s*/g, (_match, sub: string) => {
+    return `__LIE__${latexToGreek(sub)}__LIESEP__`;
+  });
+
+  // Handle \det(...) → det(...)
+  s = s.replace(/\\det/g, "det");
+
+  // Handle \operatorname{Tr} → Tr
+  s = s.replace(/\\operatorname\{Tr\}/g, "Tr");
+
+  // Handle \star → star
+  s = s.replace(/\\star/g, "star");
+
+  // Handle \iota → i
+  s = s.replace(/\\iota/g, "i");
+
+  // Normalize operators
+  s = s.replace(/\\cdot/g, "*");
+  s = s.replace(/\\times/g, "*");
+  s = s.replace(/\\wedge/g, "^");
+
+  // Convert Greek LaTeX commands to Unicode
+  s = latexToGreek(s);
+
+  // Process tensors with indices: Name_{...}^{...} or Name^{...}_{...}
+  // Also handles staggered: Name^{a}{}_{b}{}^{c}{}_{d}
+  s = s.replace(/([A-Za-z\u0391-\u03A1\u03A3-\u03A9\u03B1-\u03C9])((?:\s*\{\})*(?:\s*[_^]\{[^}]*\}(?:\s*\{\})*)+)/g,
+    (_match, name: string, indexPart: string) => {
+      const indices: string[] = [];
+      // Match each ^{...} or _{...} group, skipping empty {} separators
+      const groupRe = /([_^])\{([^}]*)\}/g;
+      let m: RegExpExecArray | null;
+      while ((m = groupRe.exec(indexPart)) !== null) {
+        const variance = m[1] === "^" ? "^" : "_";
+        const content = m[2].trim();
+        if (content === "") continue; // empty separator
+        // Split indices: if content has spaces, split on whitespace;
+        // otherwise treat each character as a separate index label.
+        const labels = content.includes(" ")
+          ? content.split(/\s+/).filter(Boolean)
+          : [...content].filter((ch) => ch.trim());
+        for (const label of labels) {
+          indices.push(variance + label);
+        }
+      }
+      if (indices.length > 0) {
+        return name + "{" + indices.join(" ") + "}";
+      }
+      return name;
+    });
+
+  // Restore Lie derivative pattern
+  s = s.replace(/__LIE__(.+?)__LIESEP__(.+)/g, (_match, sub: string, body: string) => {
+    return `L(${sub.trim()}, ${body.trim()})`;
+  });
+
+  // Clean up whitespace
+  s = s.replace(/\s+/g, " ").trim();
+  // Remove spaces after ( and before )
+  s = s.replace(/\(\s+/g, "(");
+  s = s.replace(/\s+\)/g, ")");
+
+  return { ok: true, value: s };
+}
+
 export function toLatex(token: ValidationToken): string {
   const { head, args, indices, value } = token;
 
