@@ -1,13 +1,13 @@
 # Change: Add LaTeX Transpiler and Playground Integration
 
 ## Why
-Users need a way to visualize Chacana expressions in standard mathematical notation (LaTeX) and to import existing LaTeX tensor expressions into Chacana micro-syntax. This bridges the gap between publication-quality rendering and machine-parseable computation.
+Users currently cannot preview Chacana expressions in standard mathematical notation or import LaTeX expressions from papers. A bidirectional LaTeX transpiler closes this gap.
 
 ## What Changes
-- **ADDED** `latex-transpiler` capability to the core specification.
-- **Implemented** `toLatex` and `fromLatex` functions in the TypeScript/JavaScript engine.
-- **Enhanced** the Web Playground with real-time KaTeX rendering and LaTeX import functionality.
-- **Updated** the browser bundle to export LaTeX transformation utilities.
+- **ADD** `latex-transpiler` capability to the core specification.
+- **Implement** `toLatex` and `fromLatex` functions in the TypeScript engine (Phase 1; Python implementation is a follow-up).
+- **Enhance** the Web Playground with real-time LaTeX rendering and LaTeX import functionality.
+- **Update** the browser bundle to export LaTeX transformation utilities.
 
 ## Impact
 - Affected specs: `latex-transpiler` (new).

@@ -8,10 +8,20 @@ The LaTeX Transpiler provides bidirectional conversion between the Chacana `Vali
 ### Requirement: AST to LaTeX Transformation (toLatex)
 The transpiler SHALL correctly transform a `ValidationToken` AST into a valid LaTeX string.
 
+#### Scenario: Transform scalar identifier
+- **GIVEN** an AST for a scalar token with head `x` and no indices
+- **WHEN** `toLatex` is called
+- **THEN** it MUST return `x`.
+
+#### Scenario: Transform numeric coefficient
+- **GIVEN** an AST for `2 * T{^a _b}`
+- **WHEN** `toLatex` is called
+- **THEN** it MUST return `2 T^{a}{}_{b}`.
+
 #### Scenario: Transform standard Riemann tensor
 - **GIVEN** an AST for `R{^a _b _c _d}`
 - **WHEN** `toLatex` is called
-- **THEN** it MUST return `R^{a}{}_{b c d}` (or equivalent canonical LaTeX).
+- **THEN** it MUST return `R^{a}{}_{b c d}`.
 
 #### Scenario: Transform Greek indices
 - **GIVEN** an AST for `T{^α _β}`
@@ -31,12 +41,27 @@ The transpiler SHALL correctly transform a `ValidationToken` AST into a valid La
 #### Scenario: Transform covariant derivatives
 - **GIVEN** an AST for `T{_a ;b}`
 - **WHEN** `toLatex` is called
-- **THEN** it MUST return `T_{a ;\! b}` (using `;\!` for thin negative spacing after the semicolon).
+- **THEN** it MUST return `T_{a ;\! b}`.
+
+#### Scenario: Transform negation
+- **GIVEN** an AST for `-T{^a _b}`
+- **WHEN** `toLatex` is called
+- **THEN** it MUST return `-T^{a}{}_{b}`.
 
 #### Scenario: Transform nested functional operators
 - **GIVEN** an AST for `d(star(omega))`
 - **WHEN** `toLatex` is called
-- **THEN** it MUST use scaled delimiters, returning `d \left( \star \left( \omega \right) \right)`.
+- **THEN** it MUST return `d(\star(\omega))`.
+
+#### Scenario: Transform symmetrized indices
+- **GIVEN** an AST for `T{_(a _b)}` with symmetrization metadata
+- **WHEN** `toLatex` is called
+- **THEN** it MUST return `T_{(a b)}`.
+
+#### Scenario: Transform antisymmetrized indices
+- **GIVEN** an AST for `T{_[a _b]}` with antisymmetrization metadata
+- **WHEN** `toLatex` is called
+- **THEN** it MUST return `T_{[a b]}`.
 
 ### Requirement: Supported LaTeX Operator Mapping
 The transpiler SHALL support a core set of LaTeX commands for bidirectional transformation.
@@ -44,9 +69,10 @@ The transpiler SHALL support a core set of LaTeX commands for bidirectional tran
 | Operator | Chacana | LaTeX |
 | :--- | :--- | :--- |
 | Addition | `+` | `+` |
+| Negation | `-` (prefix) | `-` |
 | Subtraction | `-` | `-` |
 | Multiplication | `*` | `\cdot`, `\times`, or implicit |
-| Wedge Product | `^` | `\wedge` |
+| Wedge Product | `∧` (wedge infix) | `\wedge` |
 | Exterior Deriv. | `d` | `d` |
 | Lie Derivative | `L` | `\mathcal{L}` |
 | Hodge Star | `star`/`hodge` | `\star` |
@@ -61,25 +87,30 @@ The transpiler SHALL support a core set of LaTeX commands for bidirectional tran
 - **THEN** it MUST use the canonical LaTeX representation specified in the mapping table.
 
 ### Requirement: LaTeX to Chacana Transformation (fromLatex)
-The transpiler SHALL provide a basic mechanism to convert common LaTeX tensor notation back into Chacana micro-syntax.
+The transpiler SHALL provide a basic mechanism to convert common LaTeX tensor notation back into Chacana micro-syntax, preserving the positional order of indices as they appear in the LaTeX source.
 
 #### Scenario: Import basic tensor notation
-- **GIVEN** the LaTeX string `R_{abc}^d`
+- **GIVEN** the LaTeX string `R_{abc}^{d}`
 - **WHEN** `fromLatex` is called
-- **THEN** it MUST return `R{^d _a _b _c}`.
+- **THEN** it MUST return `R{_a _b _c ^d}` (preserving positional order).
 
 #### Scenario: Import basic arithmetic
 - **GIVEN** the LaTeX string `A + B \cdot C`
 - **WHEN** `fromLatex` is called
 - **THEN** it MUST return `A + B * C`.
 
+#### Scenario: Handle unsupported LaTeX input
+- **GIVEN** a LaTeX string containing unsupported constructs (e.g., `\frac{1}{2} R_{abcd}`)
+- **WHEN** `fromLatex` is called
+- **THEN** it MUST return an error result describing the unsupported construct, along with any successfully parsed portion.
+
 ### Requirement: Playground Integration
-The Web Playground SHALL display the LaTeX rendering of the current expression in real-time.
+The Web Playground SHALL display a rendered mathematical representation of the current expression in real-time.
 
 #### Scenario: Display rendered expression
 - **GIVEN** a valid Chacana expression in the playground
 - **WHEN** the input is updated
-- **THEN** the playground MUST call `toLatex` and render the result using KaTeX.
+- **THEN** the playground MUST call `toLatex` and render the result as formatted mathematical notation.
 
 #### Scenario: Import from LaTeX UI
 - **GIVEN** a LaTeX string in the import field
