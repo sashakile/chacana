@@ -1,12 +1,12 @@
 # Tasks: Add LaTeX Transpiler and Playground Integration
 
 ## 1. Specification
-- [ ] 1.1 Create `openspec/changes/add-latex-transpiler/specs/latex-transpiler/spec.md`
+- [x] 1.1 Create `openspec/changes/add-latex-transpiler/specs/latex-transpiler/spec.md`
 
 ## 2. Core Implementation — `toLatex`
-- [ ] 2.1 Write failing tests for `toLatex` in `vscode-chacana/test/unit/latex.test.ts`
-- [ ] 2.2 Implement `toLatex` in `vscode-chacana/src/server/latex.ts` to pass tests
-- [ ] 2.3 Verify: `npm run test` in `vscode-chacana`
+- [x] 2.1 Write failing tests for `toLatex` in `vscode-chacana/test/unit/latex.test.ts`
+- [x] 2.2 Implement `toLatex` in `vscode-chacana/src/server/latex.ts` to pass tests
+- [x] 2.3 Verify: `npm run test` in `vscode-chacana`
 
 ## 3. Core Implementation — `fromLatex`
 - [ ] 3.1 Write failing tests for `fromLatex` in `vscode-chacana/test/unit/latex.test.ts`
