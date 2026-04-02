@@ -16,3 +16,4 @@ export {
   HEAD_MULTIPLY,
   STRUCTURAL_HEADS,
 } from "../server/ast.js";
+export { toLatex, fromLatex, type FromLatexResult } from "../server/latex.js";

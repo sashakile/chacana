@@ -14,11 +14,11 @@
 - [x] 3.3 Verify: `npm run test` in `vscode-chacana`
 
 ## 4. Playground Integration
-- [ ] 4.1 Export `toLatex` and `fromLatex` from `vscode-chacana/src/browser/index.ts`
-- [ ] 4.2 Build the browser bundle: `npm run build` in `vscode-chacana`
-- [ ] 4.3 Add KaTeX CDN links to `docs/playground.md`
-- [ ] 4.4 Add LaTeX Preview panel and Import from LaTeX UI to `docs/playground.md`
-- [ ] 4.5 Update `docs/playground.md` JS to handle LaTeX rendering and importing
+- [x] 4.1 Export `toLatex` and `fromLatex` from `vscode-chacana/src/browser/index.ts`
+- [x] 4.2 Build the browser bundle: `npm run build` in `vscode-chacana`
+- [x] 4.3 Add KaTeX CDN links to `docs/playground.md`
+- [x] 4.4 Add LaTeX Preview panel and Import from LaTeX UI to `docs/playground.md`
+- [x] 4.5 Update `docs/playground.md` JS to handle LaTeX rendering and importing
 
 ## 5. Documentation
 - [ ] 5.1 Document `toLatex` / `fromLatex` API usage in `docs/`

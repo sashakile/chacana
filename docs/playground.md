@@ -196,6 +196,60 @@ Type a Chacana tensor expression and see it validated in real time.
 .ctx-actions { display: flex; gap: 0.4rem; margin-top: 0.25rem; }
 .ctx-add-row.copied { border-color: #059669; color: #059669; }
 
+/* LaTeX preview */
+#latex-output {
+  font-size: 1.3rem;
+  padding: 1rem 1.25rem;
+  border: 2px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+  background: var(--md-code-bg-color);
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+}
+.latex-import-section {
+  margin-top: 0.75rem;
+  border: 2px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  transition: border-color 0.15s;
+}
+.latex-import-section[open] { border-color: var(--md-accent-fg-color); }
+.latex-import-section summary {
+  font-size: 0.85rem; cursor: pointer; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--md-default-fg-color); opacity: 0.85;
+}
+#latex-import-input {
+  font-family: var(--md-code-font-family, "Roboto Mono", monospace);
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.25rem;
+  background: var(--md-code-bg-color);
+  color: var(--md-code-fg-color);
+  width: 100%;
+  margin-top: 0.4rem;
+  box-sizing: border-box;
+}
+#latex-import-btn {
+  font-size: 0.8rem;
+  margin-top: 0.3rem;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--md-accent-fg-color);
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--md-accent-fg-color);
+  cursor: pointer;
+}
+#latex-import-btn:hover { background: var(--md-accent-fg-color); color: #fff; }
+#latex-import-error {
+  font-size: 0.8rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+}
+[data-md-color-scheme="slate"] #latex-import-error { color: #f87171; }
+
 /* Collapsible tree */
 .tree-section {
   margin-top: 0.75rem;
@@ -265,8 +319,23 @@ Type a Chacana tensor expression and see it validated in real time.
       <summary>Syntax Tree</summary>
       <div id="tree-output"></div>
     </details>
+    <div class="pg-label" style="margin-top:0.75rem">LaTeX Preview</div>
+    <div id="latex-output" aria-label="LaTeX rendered output" aria-live="polite"></div>
+    <details class="latex-import-section">
+      <summary>Import from LaTeX</summary>
+      <input id="latex-import-input" type="text" placeholder="e.g. R_{abc}^{d}" spellcheck="false">
+      <button id="latex-import-btn" type="button">Import</button>
+      <div id="latex-import-error"></div>
+    </details>
   </div>
 </div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+  integrity="sha384-nB0miv6/jRmo5ULSR0hU6x/mKQ4v3w5CZFK4yPcBY90OQlHBD4kxB3cYApRVfCz"
+  crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
+  integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg"
+  crossorigin="anonymous"></script>
 
 <script>
 var TS_CDN = 'https://cdn.jsdelivr.net/npm/web-tree-sitter@0.24.7/';
@@ -328,6 +397,10 @@ async function loadChecker() {
   var ctxTensorsEl = document.getElementById('ctx-tensors');
   var ctxMfldName  = document.getElementById('ctx-mfld-name');
   var ctxMfldDim   = document.getElementById('ctx-mfld-dim');
+  var latexOutput  = document.getElementById('latex-output');
+  var latexImportInput = document.getElementById('latex-import-input');
+  var latexImportBtn   = document.getElementById('latex-import-btn');
+  var latexImportError = document.getElementById('latex-import-error');
   var activeParser = null;
   var checkerReady = false;
 
@@ -536,6 +609,7 @@ async function loadChecker() {
       treeOutput.innerHTML = '';
       diagOutput.className = 'diag-ok';
       diagOutput.textContent = '';
+      latexOutput.innerHTML = '';
       return;
     }
     var tree = activeParser.parse(text);
@@ -557,7 +631,17 @@ async function loadChecker() {
       if (!ast) {
         diagOutput.className = 'diag-err';
         diagOutput.textContent = 'Could not build AST';
+        latexOutput.innerHTML = '';
         return;
+      }
+      // LaTeX preview
+      if (typeof katex !== 'undefined' && ChacanaChecker.toLatex) {
+        try {
+          var latex = ChacanaChecker.toLatex(ast);
+          katex.render(latex, latexOutput, { throwOnError: false, displayMode: true });
+        } catch (_e) {
+          latexOutput.innerHTML = '<span style="opacity:0.4">LaTeX error</span>';
+        }
       }
       var ctx = null;
       var hasTensors = ctxState.tensors.some(function(t) { return t.name.trim(); });
@@ -633,6 +717,26 @@ async function loadChecker() {
   });
 
   exprInput.addEventListener('input', update);
+
+  // LaTeX import
+  latexImportBtn.addEventListener('click', function() {
+    var latex = latexImportInput.value.trim();
+    latexImportError.textContent = '';
+    if (!latex) return;
+    if (typeof ChacanaChecker === 'undefined' || !ChacanaChecker.fromLatex) {
+      latexImportError.textContent = 'Checker not loaded yet';
+      return;
+    }
+    var result = ChacanaChecker.fromLatex(latex);
+    if (result.ok) {
+      exprInput.value = result.value;
+      latexImportInput.value = '';
+      update();
+      exprInput.focus();
+    } else {
+      latexImportError.textContent = result.error;
+    }
+  });
 
   var defaultTensors = JSON.parse(JSON.stringify(ctxState.tensors));
 
