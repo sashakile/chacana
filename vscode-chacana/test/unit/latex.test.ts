@@ -3,7 +3,6 @@ import {
   Variance,
   IndexType,
   makeToken,
-  emptyMetadata,
   HEAD_ADD,
   HEAD_NEGATE,
   HEAD_MULTIPLY,
@@ -141,6 +140,30 @@ describe("toLatex", () => {
     };
     const T = makeToken("T", [], [covar("a"), covar("b")], null, meta);
     expect(toLatex(T)).toBe("T_{[a b]}");
+  });
+
+  it("transforms subtraction A - B via Add(A, Negate(B))", () => {
+    const A = makeToken("A");
+    const B = makeToken("B");
+    const neg = makeToken(HEAD_NEGATE, [B]);
+    const sum = makeToken(HEAD_ADD, [A, neg]);
+    expect(toLatex(sum)).toBe("A - B");
+  });
+
+  it("transforms negation of compound expression -(A + B)", () => {
+    const A = makeToken("A");
+    const B = makeToken("B");
+    const sum = makeToken(HEAD_ADD, [A, B]);
+    const neg = makeToken(HEAD_NEGATE, [sum]);
+    expect(toLatex(neg)).toBe("-(A + B)");
+  });
+
+  it("transforms comma derivative T{_a ,b}", () => {
+    const T = makeToken("T", [], [
+      covar("a"),
+      idx("b", Variance.Covar, { isDerivative: true, derivativeType: "comma" }),
+    ]);
+    expect(toLatex(T)).toBe("T_{a ,\\! b}");
   });
 
   it("transforms addition A + B", () => {
@@ -314,6 +337,41 @@ describe("fromLatex", () => {
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value).toBe("star(ω)");
+    }
+  });
+
+  it("passes through numeric coefficients", () => {
+    const result = fromLatex("2 T^{a}{}_{b}");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("2 T{^a _b}");
+    }
+  });
+
+  it("handles multiple Lie derivatives", () => {
+    const result = fromLatex("\\mathcal{L}_{X} A + \\mathcal{L}_{Y} B");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("L(X, A) + L(Y, B)");
+    }
+  });
+});
+
+// --- roundtrip test ---
+
+describe("roundtrip", () => {
+  it("toLatex → fromLatex produces valid Chacana for Riemann tensor", () => {
+    const R = makeToken("R", [], [
+      contra("a"),
+      covar("b"),
+      covar("c"),
+      covar("d"),
+    ]);
+    const latex = toLatex(R);
+    const result = fromLatex(latex);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("R{^a _b _c _d}");
     }
   });
 });

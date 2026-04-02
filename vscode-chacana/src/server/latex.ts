@@ -2,7 +2,7 @@
  * Bidirectional LaTeX ↔ Chacana transpiler.
  */
 
-import type { ValidationToken, ChacanaIndex } from "./ast.js";
+import type { ValidationToken } from "./ast.js";
 import {
   HEAD_ADD,
   HEAD_NEGATE,
@@ -90,6 +90,8 @@ function renderIndices(token: ValidationToken): string {
       const idx = indices[j];
       if (idx.isDerivative && idx.derivativeType === "semicolon") {
         result += ";\\! ";
+      } else if (idx.isDerivative && idx.derivativeType === "comma") {
+        result += ",\\! ";
       }
 
       result += greekToLatex(idx.label);
@@ -104,6 +106,9 @@ function renderIndices(token: ValidationToken): string {
 
   return result;
 }
+
+/** Heads that produce compound (multi-term) LaTeX needing parens when negated. */
+const COMPOUND_HEADS = new Set([HEAD_ADD, HEAD_WEDGE]);
 
 export type FromLatexResult =
   | { ok: true; value: string }
@@ -120,22 +125,12 @@ const UNSUPPORTED_COMMANDS = new Set([
   "\\frac", "\\sqrt", "\\sum", "\\int", "\\prod", "\\lim",
 ]);
 
-/** LaTeX operator → Chacana operator mapping. */
-const LATEX_OP_TO_CHACANA: Record<string, string> = {
-  "\\cdot": "*",
-  "\\times": "*",
-  "\\wedge": "^",
-  "\\star": "star",
-  "\\det": "det",
-  "\\operatorname{Tr}": "Tr",
-  "\\iota": "i",
-};
-
 function latexToGreek(s: string): string {
   return s.replace(/\\(alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega)\b/g,
     (match) => LATEX_TO_GREEK[match] ?? match);
 }
 
+/** Convert a LaTeX string into Chacana micro-syntax, preserving positional index order. */
 export function fromLatex(input: string): FromLatexResult {
   // Check for unsupported commands first
   for (const cmd of UNSUPPORTED_COMMANDS) {
@@ -151,7 +146,7 @@ export function fromLatex(input: string): FromLatexResult {
   s = s.replace(/\\left\s*/g, "");
   s = s.replace(/\\right\s*/g, "");
 
-  // Handle \mathcal{L}_{...} <body> → L(..., <body>)
+  // Sentinels prevent the index regex from consuming the Lie derivative subscript.
   s = s.replace(/\\mathcal\{L\}_\{([^}]+)\}\s*/g, (_match, sub: string) => {
     return `__LIE__${latexToGreek(sub)}__LIESEP__`;
   });
@@ -203,10 +198,12 @@ export function fromLatex(input: string): FromLatexResult {
       return name;
     });
 
-  // Restore Lie derivative pattern
-  s = s.replace(/__LIE__(.+?)__LIESEP__(.+)/g, (_match, sub: string, body: string) => {
-    return `L(${sub.trim()}, ${body.trim()})`;
-  });
+  // Restore Lie derivative sentinels. Body captures the next tensor name
+  // plus optional brace-enclosed indices (which may contain spaces).
+  s = s.replace(/__LIE__(\S+?)__LIESEP__(\w+(?:\{[^}]*\})*)/g,
+    (_match, sub: string, body: string) => {
+      return `L(${sub.trim()}, ${body.trim()})`;
+    });
 
   // Clean up whitespace
   s = s.replace(/\s+/g, " ").trim();
@@ -217,6 +214,7 @@ export function fromLatex(input: string): FromLatexResult {
   return { ok: true, value: s };
 }
 
+/** Convert a ValidationToken AST into a valid LaTeX string. */
 export function toLatex(token: ValidationToken): string {
   const { head, args, indices, value } = token;
 
@@ -225,14 +223,30 @@ export function toLatex(token: ValidationToken): string {
     return value != null ? String(value) : "0";
   }
 
-  // Negation: -<inner>
+  // Negation: -<inner> (wrap compound expressions in parens)
   if (head === HEAD_NEGATE && args.length === 1) {
-    return "-" + toLatex(args[0]);
+    const inner = args[0];
+    const innerLatex = toLatex(inner);
+    if (COMPOUND_HEADS.has(inner.head)) {
+      return `-(${innerLatex})`;
+    }
+    return "-" + innerLatex;
   }
 
-  // Addition: a + b + ...
+  // Addition: handles subtraction via Negate args (A + Negate(B) → A - B)
   if (head === HEAD_ADD) {
-    return args.map(toLatex).join(" + ");
+    const parts: string[] = [];
+    for (let i = 0; i < args.length; i++) {
+      const arg = args[i];
+      if (i > 0 && arg.head === HEAD_NEGATE && arg.args.length === 1) {
+        parts.push(" - " + toLatex(arg.args[0]));
+      } else if (i === 0) {
+        parts.push(toLatex(arg));
+      } else {
+        parts.push(" + " + toLatex(arg));
+      }
+    }
+    return parts.join("");
   }
 
   // Multiplication: implicit juxtaposition
