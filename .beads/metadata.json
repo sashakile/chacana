@@ -1,7 +1,7 @@
 {
   "database": "dolt",
   "backend": "dolt",
-  "dolt_mode": "server",
+  "dolt_mode": "embedded",
   "dolt_database": "chacana",
   "project_id": "587baa0d-cf21-4feb-ab59-dd0d3bd1d034"
 }
