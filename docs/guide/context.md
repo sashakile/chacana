@@ -4,16 +4,24 @@ The Global Context (denoted **Γ** in the spec) declares manifolds, tensors,
 metrics, and other configuration via TOML. The type checker uses this context
 to validate expressions.
 
-## Loading a context
+## TL;DR
+
+Use this page when you want to define the tensors, manifolds, metrics, and strategy settings that make type checking meaningful.
+
+Prerequisites:
+- you already know the expression syntax you want to validate
+- you want file-based or string-based TOML input for the checker
+
+## Load a context from a file or string
 
 ```python
 import chacana
 
 # From a file
-ctx = chacana.load_context("path/to/context.toml")
+ctx = chacana.load_context_file("path/to/context.toml")
 
 # From a string
-ctx = chacana.load_context("""
+ctx = chacana.load_context_string("""
 [manifold.M]
 dimension = 4
 
@@ -24,7 +32,7 @@ index_pattern = ["Contra", "Covar"]
 """)
 ```
 
-## Manifold declarations
+## Declare manifolds
 
 ```toml
 [manifold.M]
@@ -32,7 +40,7 @@ dimension = 4           # Required
 index_type = "Latin"    # "Latin" (default), "Greek", or "Spinor"
 ```
 
-## Tensor declarations
+## Declare tensors
 
 ```toml
 [tensor.R]
@@ -46,7 +54,7 @@ The `index_pattern` length must equal `rank`. Each entry is `"Contra"` or `"Cova
 
 Symmetry indices are **1-based** slot positions.
 
-## Strategy
+## Configure strategy settings
 
 ```toml
 [strategy]
@@ -57,14 +65,14 @@ contraction_order = "optimal"  # Extra keys are preserved
 When `active_metric` is set, same-variance contractions (e.g., `A{_a} * B{_a}`)
 are permitted, interpreted as contraction through the metric.
 
-## Sparsity patterns
+## Declare sparsity patterns
 
 ```toml
 [sparsity.R]
 structural_zeros = [[0, 0, 0, 0], [1, 1, 1, 1]]
 ```
 
-## Perturbation declarations
+## Declare perturbations
 
 ```toml
 [perturbation.eps]
@@ -73,7 +81,7 @@ order = 2
 manifold = "M"           # Must reference a declared manifold
 ```
 
-## Validation
+## What the loader validates
 
 The context loader performs cross-referential validation:
 

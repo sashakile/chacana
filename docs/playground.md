@@ -8,6 +8,16 @@ hide:
 
 Type a Chacana tensor expression and see it validated in real time.
 
+## TL;DR
+
+Use the playground when you want to try Chacana in the browser without installing the Python package.
+
+What you can do here:
+- type or paste an expression and see syntax highlighting immediately
+- inspect validation feedback and the syntax tree
+- preview browser-only LaTeX import/export from the TypeScript checker bundle
+- experiment with a lightweight TOML context editor
+
 The playground also includes browser-only LaTeX import/export powered by the TypeScript checker bundle. For implementation details and current availability, see [Browser LaTeX Transpiler](api/latex.md).
 
 <style>

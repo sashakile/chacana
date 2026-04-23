@@ -1,0 +1,1 @@
+Rule-of-5 review for chacana-ymn.6 converged on the edited pages without a second correction round. The final pass added TL;DR and prerequisite framing to development, playground, context, and expressions docs, renamed generic headings to retrieval-friendly headings, and clarified that Git hooks require an explicit core.hooksPath setup step in each clone.

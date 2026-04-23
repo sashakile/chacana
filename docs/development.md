@@ -1,6 +1,17 @@
 # Development
 
-## Setup
+## TL;DR
+
+Use this page when you want to work on the repository itself rather than just use the Python package.
+
+Prerequisites:
+- Git
+- Python 3.10+
+- `uv` for the documented developer workflow
+
+This page shows how to set up the dev environment, enable repository hooks, run quality checks, and build the docs.
+
+## Development environment setup
 
 ```bash
 git clone https://github.com/sashakile/chacana.git
@@ -8,13 +19,15 @@ cd chacana
 uv sync --dev
 ```
 
-Git hooks are configured automatically via `.githooks/`:
+The repository includes hook scripts in `.githooks/`, but Git only uses them after you point `core.hooksPath` at that directory:
 
 ```bash
 git config core.hooksPath .githooks
 ```
 
-## Running checks
+After you run that command once in this clone, `git commit` will use the repository's pre-commit hook and `git push` will use the pre-push hook.
+
+## Developer quality checks
 
 ```bash
 # Tests
@@ -31,7 +44,7 @@ uv run mypy src/chacana/
 uvx typos src/ tests/ README.md .wai/ openspec/
 ```
 
-## Pre-commit hook
+## What the pre-commit hook runs
 
 The pre-commit hook runs automatically on `git commit`:
 
@@ -40,11 +53,11 @@ The pre-commit hook runs automatically on `git commit`:
 3. **ruff format --check** -- format verification
 4. **mypy** -- type check
 
-## Pre-push hook
+## What the pre-push hook runs
 
 The pre-push hook runs `pytest` before allowing a push.
 
-## Building docs
+## Documentation build and preview
 
 ```bash
 uv sync --extra docs
@@ -52,7 +65,7 @@ uv run mkdocs serve     # Local preview at http://127.0.0.1:8000
 uv run mkdocs build     # Build static site to site/
 ```
 
-## CI
+## CI summary
 
 GitHub Actions runs on every push to `main` and on pull requests:
 
@@ -61,7 +74,7 @@ GitHub Actions runs on every push to `main` and on pull requests:
 
 Docs are deployed to GitHub Pages automatically on push to `main`.
 
-## Project structure
+## Repository layout overview
 
 ```
 chacana/
