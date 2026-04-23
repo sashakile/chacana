@@ -1,10 +1,24 @@
 # Chacana
 
-Chacana is a tensor calculus DSL with static type checking. It parses tensor
-expressions into a MathJSON-style AST and validates index consistency, rank,
-symmetry, and differential geometry operator constraints.
+Chacana is a tensor calculus DSL and Python library for parsing tensor
+expressions, checking index and operator consistency, and producing a
+MathJSON-style AST.
 
-## Features
+This documentation is for readers who want to use the Python package, define
+TOML tensor contexts, explore the language syntax, or integrate Chacana into
+editor and browser tooling.
+
+## Start here
+
+If you are new to Chacana, use this path:
+
+1. Read [Installation](getting-started/installation.md)
+2. Follow [Quick Start](getting-started/quickstart.md) for one complete runnable example
+3. Use the [User Guide](guide/expressions.md) when you need syntax, context, or checker details
+4. Use the [API Reference](api/index.md) for Python package details
+5. Try the [Playground](playground.md) for browser-based exploration
+
+## What Chacana gives you
 
 - **PEG Grammar** -- deterministic parsing of tensor expressions with Arpeggio
 - **Static Type Checking** -- contraction consistency, free index invariance, symmetry validation
@@ -16,6 +30,9 @@ symmetry, and differential geometry operator constraints.
 - **`.chcn` file extension** -- canonical extension for Chacana expression files
 
 ## Quick Example
+
+This is the whole game in miniature: load a context, parse a valid tensor
+expression, and expect invalid expressions to raise type errors.
 
 ```python
 import chacana
@@ -32,7 +49,7 @@ chacana.parse("A{^a} + B{_a}", context=ctx)
 # ChacanaTypeError: Free index mismatch in sum
 ```
 
-## Architecture
+## Implementation pipeline overview
 
 ```
 Expression String
