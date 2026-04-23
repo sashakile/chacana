@@ -8,6 +8,8 @@ hide:
 
 Type a Chacana tensor expression and see it validated in real time.
 
+The playground also includes browser-only LaTeX import/export powered by the TypeScript checker bundle. For implementation details and current availability, see [Browser LaTeX Transpiler](api/latex.md).
+
 <style>
 /* Layout */
 .playground-grid {

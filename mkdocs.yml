@@ -40,6 +40,7 @@ nav:
       - Type Checking: guide/type-checking.md
       - Differential Geometry: guide/diffgeom.md
       - Editor Support: guide/editor-support.md
+      - Browser LaTeX Transpiler: api/latex.md
   - API Reference:
       - chacana: api/index.md
       - chacana.ast: api/ast.md
@@ -48,7 +49,6 @@ nav:
       - chacana.checker: api/checker.md
       - chacana.visitor: api/visitor.md
       - chacana.errors: api/errors.md
-      - LaTeX Transpiler: api/latex.md
   - Playground: playground.md
   - Development: development.md
 

@@ -1,11 +1,13 @@
-# LaTeX Transpiler
+# Browser LaTeX Transpiler
 
-Bidirectional conversion between Chacana `ValidationToken` ASTs and LaTeX mathematical notation.
+Bidirectional conversion between Chacana `ValidationToken` ASTs and LaTeX mathematical notation for the browser and TypeScript tooling.
 
-!!! note "TypeScript only"
-    This module is currently available in the TypeScript/browser engine. A Python implementation is planned.
+!!! warning "Not part of the Python package API"
+    `toLatex()` and `fromLatex()` are currently implemented in the browser/TypeScript engine (`vscode-chacana/src/server/latex.ts` and `vscode-chacana/src/browser/index.ts`). They are **not** exposed from `src/chacana/` yet, so Python users should not expect these functions in the installed `chacana` package.
 
-## `toLatex(token)`
+Use this page when working on the playground, the browser bundle, or the VS Code extension. For the Python package API, start with [`chacana`](index.md).
+
+## `toLatex(token)` (browser/TypeScript)
 
 Converts a `ValidationToken` AST into a LaTeX string.
 
@@ -36,7 +38,7 @@ const latex = toLatex(ast);
 - **Symmetrization**: Parenthesized (`T_{(a b)}`) and bracketed (`T_{[a b]}`) groups.
 - **Operators**: All core operators — see the [operator mapping table](#operator-mapping).
 
-## `fromLatex(input)`
+## `fromLatex(input)` (browser/TypeScript)
 
 Converts a LaTeX string into Chacana micro-syntax.
 
