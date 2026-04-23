@@ -1,9 +1,27 @@
 # Editor Support
 
-Chacana provides IDE integration through a VS Code extension with a bundled
-Language Server Protocol (LSP) server. The extension supports `.chcn` files
-with syntax highlighting, real-time diagnostics, hover info, and
-go-to-definition.
+Chacana supports two editor-integration paths:
+
+- use the VS Code extension when you want LSP features such as diagnostics, hover, and go-to-definition
+- use the tree-sitter grammar directly when you want syntax highlighting and incremental parsing in other editors
+
+## TL;DR
+
+Use this page if you want to decide which editor path to use and how Chacana finds its TOML context.
+
+| Need | Best path |
+|---|---|
+| Full language features in VS Code | VS Code extension + bundled LSP |
+| Syntax highlighting in another editor | `tree-sitter-chacana/` grammar |
+| Browser-only experimentation | [Playground](../playground.md) |
+
+## Support matrix
+
+| Editor/tool | Syntax highlighting | Diagnostics | Hover / go-to-definition | Setup path |
+|---|---|---|---|---|
+| VS Code extension | Yes | Yes | Yes | Build/install `vscode-chacana` |
+| Neovim / Helix / Zed via tree-sitter | Yes | Limited to what you wire up yourself | No built-in LSP from this repo | Use `tree-sitter-chacana/` |
+| Playground | Yes | Yes | No | Open the browser page |
 
 ## VS Code
 
@@ -23,33 +41,27 @@ npx vsce package
 code --install-extension vscode-chacana-0.1.0.vsix
 ```
 
-### Features
+### What the VS Code extension gives you
 
-#### Syntax Highlighting
+| Capability | What it does |
+|---|---|
+| Syntax highlighting | Highlights tensors, indices, variance markers, operators, and functional operators |
+| Real-time syntax diagnostics | Flags malformed expressions and invalid characters as you type |
+| Type checking | Runs the Chacana checker when the expression is syntactically valid |
+| Hover | Shows tensor declarations and operator help |
+| Go-to-definition | Jumps from a tensor use to its TOML declaration |
 
-The extension provides immediate syntax coloring for `.chcn` files via a
-TextMate grammar. Tensors, indices, variance markers, operators, and
-functional operators are all highlighted.
-
-#### Real-time Diagnostics
+### Diagnostic layers
 
 As you type, the LSP server provides two layers of diagnostics:
 
 1. **Syntax errors** — via tree-sitter incremental parsing. Unclosed braces,
    invalid characters, and malformed expressions are flagged instantly.
-
 2. **Type checking** — when the expression is syntactically valid, the full
-   Chacana type checker runs:
-    - **Contraction consistency** — contracted indices must have opposite
-      variance and matching index type
-    - **Free index invariance** — all terms in a sum must have identical
-      free indices
-    - **Symmetry validity** — symmetrized groups must have matching variance
-    - **Rank checking** — tensor usage must match declared rank and pattern
-    - **Operator constraints** — Hodge star needs a metric, Lie derivative
-      needs a vector, etc.
+   Chacana type checker runs for contraction consistency, free-index invariance,
+   symmetry validity, rank checking, and operator constraints.
 
-#### Hover
+### Hover examples
 
 Hover over a tensor name to see its declaration from the TOML context:
 
@@ -65,29 +77,38 @@ Hover over a functional operator to see its documentation:
 **Exterior derivative** d(omega) — maps a p-form to a (p+1)-form
 ```
 
-#### Go-to-Definition
+### Go-to-definition
 
 `Ctrl+Click` (or `F12`) on a tensor name jumps to its `[tensor.X]`
 declaration in the TOML context file.
 
-### Context Resolution
+### Context resolution
 
 The LSP needs a TOML context file for rank checking and operator validation.
 It resolves the context in this order:
 
-1. **Directive** — add a comment in the first 5 lines of your `.chcn` file:
+1. **Directive in the source file**
    ```
    # context: path/to/context.toml
    R{^a _b _c _d}
    ```
+2. **Sibling discovery** — walk up from the `.chcn` file's directory looking for `chacana.toml`
 
-2. **Sibling file** — the LSP walks up from the `.chcn` file's directory
-   looking for `chacana.toml`.
+### What works without a context
 
-Without a context, the LSP still provides syntax errors and structural
-checks (contraction, free index invariance).
+Without a context, the LSP still provides:
 
-## Other Editors
+- syntax errors
+- contraction checks
+- free-index invariance checks
+
+Without a context, the LSP cannot fully validate:
+
+- rank declarations
+- declared tensor index patterns
+- operator requirements that depend on tensor shape or `active_metric`
+
+## Other editors via tree-sitter
 
 The tree-sitter grammar (`tree-sitter-chacana/`) works natively in:
 
@@ -95,10 +116,12 @@ The tree-sitter grammar (`tree-sitter-chacana/`) works natively in:
 - **Helix** — place the grammar in your runtime directory
 - **Zed** — supports tree-sitter grammars directly
 
-For these editors, copy the queries from `tree-sitter-chacana/queries/`:
+For these editors, start with:
 
-- `highlights.scm` — syntax highlighting
-- `validation.scm` — index extraction and variance consistency queries
+- `tree-sitter-chacana/queries/highlights.scm` for syntax highlighting
+- `tree-sitter-chacana/queries/validation.scm` for index extraction and variance consistency queries
+
+These integrations give you the grammar and queries, not the full VS Code LSP experience from this repository.
 
 ## Online Playground
 

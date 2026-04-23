@@ -1,0 +1,1 @@
+Rule-of-5 review for chacana-ymn.5 converged without follow-up edits after the first restructuring pass. The final editor-support page now opens with an answer-first path selection, a support matrix, explicit context-resolution order, and a summary of what works without a TOML context.
