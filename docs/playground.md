@@ -331,7 +331,7 @@ Type a Chacana tensor expression and see it validated in real time.
 </div>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
-  integrity="sha384-nB0miv6/jRmo5ULSR0hU6x/mKQ4v3w5CZFK4yPcBY90OQlHBD4kxB3cYApRVfCz"
+  integrity="sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+"
   crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"
   integrity="sha384-7zkQWkzuo3B5mTepMUcHkMB5jZaolc2xDwL6VFqjFALcbeS9Ggm/Yr2r3Dy4lfFg"
