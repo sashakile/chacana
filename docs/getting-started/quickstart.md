@@ -1,15 +1,54 @@
 # Quick Start
 
-## Parse a tensor expression
+## TL;DR
+
+Use this page for one complete first run of Chacana.
+
+Prerequisites:
+- you completed [Installation](installation.md)
+- you are running commands from the repository root
+- `examples/basic.toml` is available
+
+This walkthrough follows one canonical path:
+1. verify the package import
+2. load `examples/basic.toml` with `load_context_file()`
+3. parse one valid expression
+4. inspect the returned AST-like dict
+5. see one invalid expression raise `ChacanaTypeError`
+
+## Canonical first run
+
+First, verify the package is importable:
+
+```bash
+# If you installed with uv
+uv run python -c "import chacana; print(chacana.__version__)"
+
+# If you installed with pip into an active environment
+python -c "import chacana; print(chacana.__version__)"
+```
+
+Then run this Python example:
 
 ```python
 import chacana
+from chacana import ChacanaTypeError, load_context_file
 
-result = chacana.parse("R{^a _b _c _d}")
+ctx = load_context_file("examples/basic.toml")
+
+# Valid: a rank-4 tensor declared in the example context
+result = chacana.parse("R{^a _b _c _d}", context=ctx)
 print(result)
+
+try:
+    # Invalid: free-index variance mismatch across the sum
+    chacana.parse("A{^a} + B{_a}", context=ctx)
+except ChacanaTypeError as exc:
+    print(type(exc).__name__)
+    print(exc)
 ```
 
-Output:
+Expected shape of the successful result:
 
 ```python
 {
@@ -24,59 +63,25 @@ Output:
 }
 ```
 
-## Use a TOML context for type checking
+Expected failure shape:
 
-Create a TOML file declaring your manifold and tensors:
-
-```toml
-# basic.toml
-[manifold.M]
-dimension = 4
-index_type = "Latin"
-
-[tensor.R]
-manifold = "M"
-rank = 4
-index_pattern = ["Contra", "Covar", "Covar", "Covar"]
-
-[tensor.A]
-manifold = "M"
-rank = 1
-index_pattern = ["Contra"]
-
-[tensor.B]
-manifold = "M"
-rank = 1
-index_pattern = ["Contra"]
+```text
+ChacanaTypeError
+Free index mismatch in sum: term 0 has {^a}, term 1 has {_a}
 ```
 
-Then load it and parse with type checking:
+## What the example context contains
 
-```python
-import chacana
+`examples/basic.toml` declares the manifold and tensors used in the example, including:
 
-ctx = chacana.load_context("basic.toml")
+- `R` as a rank-4 tensor with index pattern `Contra, Covar, Covar, Covar`
+- `A` and `B` as rank-1 contravariant tensors
+- additional sample tensors such as `T` and `g`
 
-# Valid: matching free indices in sum
-chacana.parse("A{^a} + B{^a}", context=ctx)
+If you want to inspect or modify that context, open the repository file `examples/basic.toml`.
 
-# Invalid: mismatched variance in sum
-chacana.parse("A{^a} + B{_a}", context=ctx)
-# raises ChacanaTypeError: Free index mismatch in sum
-```
+## Next steps
 
-## Handle errors
-
-```python
-from chacana import ChacanaParseError, ChacanaTypeError
-
-try:
-    chacana.parse("R{?a}")
-except ChacanaParseError as e:
-    print(f"Syntax error: {e}")
-
-try:
-    chacana.parse("A{^a} + B{_a}", context=ctx)
-except ChacanaTypeError as e:
-    print(f"Type error: {e}")
-```
+- Read [Expressions](../guide/expressions.md) for the supported syntax
+- Read [TOML Context](../guide/context.md) to define your own tensors and manifolds
+- Read [Type Checking](../guide/type-checking.md) for the validation rules
