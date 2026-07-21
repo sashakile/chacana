@@ -158,9 +158,13 @@ class TestRankCheck:
         )
         assert check(token, basic_context) is token
 
-    def test_variance_mismatch_tolerated_with_active_metric(self):
-        """With active_metric, R{_a _b _c _d} should pass even though
-        declared pattern is [Contra, Covar, Covar, Covar]."""
+    def test_variance_mismatch_flagged_with_active_metric(self):
+        """With active_metric, R{_a _b _c _d} must still fail when the
+        declared pattern is [Contra, Covar, Covar, Covar].
+
+        The metric enables rank polymorphism and same-variance contraction,
+        but mismatched variance at full rank is most likely a user error.
+        """
         ctx = load_context("""
 [strategy]
 active_metric = "g"
@@ -182,6 +186,38 @@ index_pattern = ["Contra", "Covar", "Covar", "Covar"]
             head="R",
             indices=[
                 ChacanaIndex("a", Variance.COVAR),
+                ChacanaIndex("b", Variance.COVAR),
+                ChacanaIndex("c", Variance.COVAR),
+                ChacanaIndex("d", Variance.COVAR),
+            ],
+        )
+        with pytest.raises(ChacanaTypeError, match="index 0.*expected Contra.*got Covar"):
+            check(token, ctx)
+
+    def test_correct_variance_with_active_metric_passes(self):
+        """With active_metric, R{^a _b _c _d} matching the declared pattern
+        should still pass."""
+        ctx = load_context("""
+[strategy]
+active_metric = "g"
+
+[manifold.M]
+dimension = 4
+
+[tensor.g]
+manifold = "M"
+rank = 2
+index_pattern = ["Covar", "Covar"]
+
+[tensor.R]
+manifold = "M"
+rank = 4
+index_pattern = ["Contra", "Covar", "Covar", "Covar"]
+""")
+        token = ValidationToken(
+            head="R",
+            indices=[
+                ChacanaIndex("a", Variance.CONTRA),
                 ChacanaIndex("b", Variance.COVAR),
                 ChacanaIndex("c", Variance.COVAR),
                 ChacanaIndex("d", Variance.COVAR),
@@ -249,12 +285,28 @@ index_pattern = ["Contra", "Covar", "Covar", "Covar"]
         token = ValidationToken(head="R", indices=[])
         assert check(token, riemann_metric_ctx) is token
 
-    def test_rank4_used_as_rank4_with_metric(self, riemann_metric_ctx):
-        """R{_a _b _c _d} full Riemann — exact rank still works."""
+    def test_rank4_used_as_rank4_wrong_variance_with_metric_fails(self, riemann_metric_ctx):
+        """R{_a _b _c _d} with pattern [Contra, Covar, Covar, Covar] —
+        variance mismatch at full rank must fail even with a metric."""
         token = ValidationToken(
             head="R",
             indices=[
                 ChacanaIndex("a", Variance.COVAR),
+                ChacanaIndex("b", Variance.COVAR),
+                ChacanaIndex("c", Variance.COVAR),
+                ChacanaIndex("d", Variance.COVAR),
+            ],
+        )
+        with pytest.raises(ChacanaTypeError, match="index 0.*expected Contra.*got Covar"):
+            check(token, riemann_metric_ctx)
+
+    def test_rank4_correct_variance_with_metric_passes(self, riemann_metric_ctx):
+        """R{^a _b _c _d} matching the declared pattern still passes
+        with active_metric."""
+        token = ValidationToken(
+            head="R",
+            indices=[
+                ChacanaIndex("a", Variance.CONTRA),
                 ChacanaIndex("b", Variance.COVAR),
                 ChacanaIndex("c", Variance.COVAR),
                 ChacanaIndex("d", Variance.COVAR),

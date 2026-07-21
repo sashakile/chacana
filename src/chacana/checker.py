@@ -190,7 +190,13 @@ def _check_rank(token: ValidationToken, ctx: GlobalContext) -> None:
                     f"Tensor '{t.head}' declared with rank {decl.rank}, "
                     f"but used with {len(tensor_indices)} indices"
                 )
-        if tensor_indices and decl.index_pattern and not ctx.active_metric:
+        # Index pattern (variance) is checked regardless of metric.
+        # When the metric is active, rank polymorphism is allowed
+        # (fewer indices by even count), but if the user provides
+        # the full rank, the variance must match the declared pattern.
+        # Partial-rank usage (polymorphism) skips pattern checking
+        # because the indices don't align with the full pattern.
+        if tensor_indices and decl.index_pattern and len(tensor_indices) == decl.rank:
             for i, (actual, expected) in enumerate(
                 zip(tensor_indices, decl.index_pattern, strict=False)
             ):
