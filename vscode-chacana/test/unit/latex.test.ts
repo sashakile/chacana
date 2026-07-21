@@ -344,7 +344,7 @@ describe("fromLatex", () => {
     const result = fromLatex("2 T^{a}{}_{b}");
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.value).toBe("2 T{^a _b}");
+      expect(result.value).toBe("2 * T{^a _b}");
     }
   });
 
@@ -376,7 +376,23 @@ describe("fromLatex", () => {
     const result = fromLatex("R^{a}_{bcd} \\nabla_{e} T^{bc}");
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.value).toBe("R{^a _b _c _d} T{^b ^c ;e}");
+      expect(result.value).toBe("R{^a _b _c _d} * T{^b ^c ;e}");
+    }
+  });
+
+  it("inserts * between adjacent tensors in product", () => {
+    const result = fromLatex("R^{a}_{bcd} g^{bd}");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("R{^a _b _c _d} * g{^b ^d}");
+    }
+  });
+
+  it("inserts * between bare tensor names", () => {
+    const result = fromLatex("A B");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("A * B");
     }
   });
 });

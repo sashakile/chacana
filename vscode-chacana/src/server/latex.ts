@@ -219,6 +219,13 @@ export function fromLatex(input: string): FromLatexResult {
     return tensor.replace(/\}$/, ` ;${idx}}`);
   });
 
+  // Insert explicit * between adjacent tokens (Chacana requires explicit
+  // multiplication). Handles: T{...} T{...}, T{...} scalar, scalar T{...},
+  // and bare-name juxtaposition.
+  s = s.replace(/\}(\s+)(?=[A-Za-z0-9(])/g, (_match, space) => `} *${space}`);
+  s = s.replace(/(\b\d+)(\s+)(?=[A-Za-z])/g, (_match, num, space) => `${num} *${space}`);
+  s = s.replace(/([A-Za-z])(\s+)(?=[A-Za-z]\w*(?:\{|$))/g, (_match, name, space) => `${name} *${space}`);
+
   // Clean up whitespace
   s = s.replace(/\s+/g, " ").trim();
   // Remove spaces after ( and before )
