@@ -213,18 +213,22 @@ export function fromLatex(input: string): FromLatexResult {
     });
 
   // Restore covariant derivative sentinels: __COVD__e__SEP__T{^b ^c}
-  // becomes T{^b ^c ;e}
+  // becomes T{^b ^c ;e}. Also handles bare names: __COVD__e__SEP__f -> f{;e}
   s = s.replace(/__COVD__(\w+)__SEP__(\w+\{[^}]*\})/g, (_match, idx: string, tensor: string) => {
     // Insert ;idx before the closing brace of the tensor
     return tensor.replace(/\}$/, ` ;${idx}}`);
   });
+  s = s.replace(/__COVD__(\w+)__SEP__(\w+)\b/g, (_match, idx: string, name: string) => {
+    return `${name}{;${idx}}`;
+  });
 
   // Insert explicit * between adjacent tokens (Chacana requires explicit
   // multiplication). Handles: T{...} T{...}, T{...} scalar, scalar T{...},
-  // and bare-name juxtaposition.
-  s = s.replace(/\}(\s+)(?=[A-Za-z0-9(])/g, (_match, space) => `} *${space}`);
-  s = s.replace(/(\b\d+)(\s+)(?=[A-Za-z])/g, (_match, num, space) => `${num} *${space}`);
-  s = s.replace(/([A-Za-z])(\s+)(?=[A-Za-z]\w*(?:\{|$))/g, (_match, name, space) => `${name} *${space}`);
+  // and bare-name juxtaposition. Supports both ASCII and Greek letters.
+  const _L = 'A-Za-z\\u0391-\\u03A1\\u03A3-\\u03A9\\u03B1-\\u03C9';
+  s = s.replace(new RegExp(`\\}(\\s+)(?=[${_L}0-9(])`, 'g'), (_match, space) => `} *${space}`);
+  s = s.replace(new RegExp(`(\\b\\d+)(\\s+)(?=[${_L}])`, 'g'), (_match, num, space) => `${num} *${space}`);
+  s = s.replace(new RegExp(`([${_L}])(\\s+)(?=[${_L}]\\w*(?:\\{|$))`, 'g'), (_match, name, space) => `${name} *${space}`);
 
   // Clean up whitespace
   s = s.replace(/\s+/g, " ").trim();

@@ -395,6 +395,14 @@ describe("fromLatex", () => {
       expect(result.value).toBe("A * B");
     }
   });
+
+  it("handles \\nabla_{e} f scalar covariant derivative", () => {
+    const result = fromLatex("\\nabla_{e} f");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("f{;e}");
+    }
+  });
 });
 
 // --- roundtrip test ---
