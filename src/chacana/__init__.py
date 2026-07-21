@@ -17,7 +17,7 @@ _DEEP_NESTING_MSG = (
     "of parentheses or operators and try again."
 )
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "parse",
