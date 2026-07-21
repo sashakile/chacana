@@ -38,7 +38,7 @@ expression, and expect invalid expressions to raise type errors.
 import chacana
 
 # Load a TOML context declaring manifolds and tensors
-ctx = chacana.load_context("examples/basic.toml")
+ctx = chacana.load_context_file("examples/basic.toml")
 
 # Parse and type-check a Riemann tensor expression
 result = chacana.parse("R{^a _b _c _d}", context=ctx)

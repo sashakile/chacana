@@ -47,7 +47,7 @@ and see one invalid expression fail with a type error.
 import chacana
 
 # Load a context from TOML (declares manifolds, tensors, index patterns)
-ctx = chacana.load_context("examples/basic.toml")
+ctx = chacana.load_context_file("examples/basic.toml")
 
 # Parse and type-check an expression
 result = chacana.parse("R{^a _b _c _d}", context=ctx)

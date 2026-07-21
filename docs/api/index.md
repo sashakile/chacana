@@ -7,7 +7,8 @@ The top-level `chacana` module exposes the public API.
       members:
         - parse
         - check
-        - load_context
+        - load_context_file
+        - load_context_string
         - GlobalContext
         - ChacanaParseError
         - ChacanaTypeError
