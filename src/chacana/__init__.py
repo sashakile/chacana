@@ -9,6 +9,7 @@ from chacana.checker import check as _checker_check
 from chacana.context import GlobalContext, load_context, load_context_file, load_context_string
 from chacana.errors import ChacanaParseError, ChacanaTypeError
 from chacana.grammar import normalize_input, parse_and_validate
+from chacana.latex import from_latex, to_latex
 from chacana.visitor import parse_to_ast
 
 _DEEP_NESTING_MSG = (
@@ -21,6 +22,8 @@ __version__ = "0.1.0"
 __all__ = [
     "parse",
     "check",
+    "to_latex",
+    "from_latex",
     "load_context",
     "load_context_file",
     "load_context_string",
