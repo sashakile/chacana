@@ -107,15 +107,23 @@ def _check_symmetry(token: ValidationToken, ctx: GlobalContext | None) -> None:
 
 
 def _validate_symmetry_group(
-    indices: list[ChacanaIndex], positions: list[int], label: str
+    indices: list[ChacanaIndex],
+    positions: list[int],
+    label: str,
+    allow_mixed_variance: bool = False,
 ) -> None:
-    """Check that indices at the given positions have matching variance and type."""
+    """Check that indices at the given positions have matching variance and type.
+
+    When *allow_mixed_variance* is True (e.g. declared symmetry with an
+    active_metric where the metric mediates implicit raising/lowering),
+    the variance check is skipped. The index_type check is always enforced.
+    """
     if len(positions) < 2:
         return
     ref = indices[positions[0]]
     for pos in positions[1:]:
         other = indices[pos]
-        if ref.variance != other.variance:
+        if not allow_mixed_variance and ref.variance != other.variance:
             raise ChacanaTypeError(
                 f"Variance mismatch in {label}: index "
                 f"'{ref.label}' ({ref.variance.value}) vs "
@@ -140,6 +148,7 @@ def _check_symmetry_single(token: ValidationToken, ctx: GlobalContext | None) ->
     if ctx is not None:
         decl = ctx.tensors.get(token.head)
         if decl is not None and token.indices:
+            allow_mixed = bool(ctx.active_metric)
             for sym in decl.symmetries:
                 positions = [i - 1 for i in sym.indices]
                 if all(0 <= p < len(token.indices) for p in positions):
@@ -147,6 +156,7 @@ def _check_symmetry_single(token: ValidationToken, ctx: GlobalContext | None) ->
                         token.indices,
                         positions,
                         f"declared symmetry of '{token.head}'",
+                        allow_mixed_variance=allow_mixed,
                     )
 
 

@@ -483,6 +483,45 @@ class TestSymmetryValidation:
         with pytest.raises(ChacanaTypeError, match="[Vv]ariance.*symmetr"):
             check(token, symmetric_context)
 
+    def test_declared_symmetry_mixed_variance_with_metric_passes(self):
+        """With active_metric, mixed-variance declared symmetry is allowed.
+
+        GR tensors like R_{ab}{}^c{}_d have a declared symmetry over
+        positions 3,4 (^c contra, _d covar). With a metric active, the
+        metric handles implicit raising/lowering so this is physically valid.
+        """
+        ctx = load_context("""
+[strategy]
+active_metric = "g"
+
+[manifold.M]
+dimension = 4
+
+[tensor.g]
+manifold = "M"
+rank = 2
+index_pattern = ["Covar", "Covar"]
+
+[tensor.R]
+manifold = "M"
+rank = 4
+index_pattern = ["Covar", "Covar", "Contra", "Covar"]
+symmetries = [
+    {indices = [3, 4], type = "Symmetric"}
+]
+""")
+        # R_{ab}{}^c{}_d with mixed variance at symmetry positions 3,4
+        token = ValidationToken(
+            head="R",
+            indices=[
+                ChacanaIndex("a", Variance.COVAR, index_type=IndexType.LATIN),
+                ChacanaIndex("b", Variance.COVAR, index_type=IndexType.LATIN),
+                ChacanaIndex("c", Variance.CONTRA, index_type=IndexType.LATIN),
+                ChacanaIndex("d", Variance.COVAR, index_type=IndexType.LATIN),
+            ],
+        )
+        assert check(token, ctx) is token
+
 
 # ---------------------------------------------------------------------------
 # More comprehensive negative-path tests
