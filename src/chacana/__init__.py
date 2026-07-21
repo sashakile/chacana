@@ -4,11 +4,17 @@ from __future__ import annotations
 
 from typing import Any
 
-from chacana.checker import check
+from chacana.ast import ValidationToken
+from chacana.checker import check as _checker_check
 from chacana.context import GlobalContext, load_context, load_context_file, load_context_string
 from chacana.errors import ChacanaParseError, ChacanaTypeError
 from chacana.grammar import normalize_input, parse_and_validate
 from chacana.visitor import parse_to_ast
+
+_DEEP_NESTING_MSG = (
+    "Expression too deeply nested: reduce the nesting depth "
+    "of parentheses or operators and try again."
+)
 
 __version__ = "0.1.0"
 
@@ -22,6 +28,18 @@ __all__ = [
     "ChacanaParseError",
     "ChacanaTypeError",
 ]
+
+
+def check(token: ValidationToken, ctx: GlobalContext | None = None) -> ValidationToken:
+    """Run all type checks on a ValidationToken. Returns the token if valid.
+
+    This is a safe wrapper around the low-level checker that catches
+    RecursionError and surfaces it as a ChacanaParseError.
+    """
+    try:
+        return _checker_check(token, ctx)
+    except RecursionError as e:
+        raise ChacanaParseError(_DEEP_NESTING_MSG) from e
 
 
 def parse(expr: str, *, context: GlobalContext | None = None) -> dict[str, Any]:
@@ -40,18 +58,12 @@ def parse(expr: str, *, context: GlobalContext | None = None) -> dict[str, Any]:
     except NoMatch as e:
         raise ChacanaParseError(str(e)) from e
     except RecursionError as e:
-        raise ChacanaParseError(
-            "Expression too deeply nested: reduce the nesting depth "
-            "of parentheses or operators and try again."
-        ) from e
+        raise ChacanaParseError(_DEEP_NESTING_MSG) from e
 
     try:
         token = parse_to_ast(tree)
         check(token, context)
     except RecursionError as e:
-        raise ChacanaParseError(
-            "Expression too deeply nested: reduce the nesting depth "
-            "of parentheses or operators and try again."
-        ) from e
+        raise ChacanaParseError(_DEEP_NESTING_MSG) from e
 
     return token.to_dict()
