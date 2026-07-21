@@ -39,7 +39,19 @@ def parse(expr: str, *, context: GlobalContext | None = None) -> dict[str, Any]:
         tree = parse_and_validate(expr)
     except NoMatch as e:
         raise ChacanaParseError(str(e)) from e
+    except RecursionError as e:
+        raise ChacanaParseError(
+            "Expression too deeply nested: reduce the nesting depth "
+            "of parentheses or operators and try again."
+        ) from e
 
-    token = parse_to_ast(tree)
-    check(token, context)
+    try:
+        token = parse_to_ast(tree)
+        check(token, context)
+    except RecursionError as e:
+        raise ChacanaParseError(
+            "Expression too deeply nested: reduce the nesting depth "
+            "of parentheses or operators and try again."
+        ) from e
+
     return token.to_dict()

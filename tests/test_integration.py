@@ -49,3 +49,10 @@ class TestEndToEnd:
         result = chacana.parse("T{^a _b}", context=basic_context)
         assert result["head"] == "T"
         assert len(result["indices"]) == 2
+
+    def test_deeply_nested_parentheses_raises_parse_error(self):
+        """Deeply nested parentheses (~100 levels) should raise ChacanaParseError,
+        not propagate RecursionError."""
+        expr = "(" * 100 + "a" + ")" * 100
+        with pytest.raises(ChacanaParseError, match="deeply nested|too deep|recursion"):
+            chacana.parse(expr)
