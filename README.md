@@ -12,7 +12,7 @@ integrations around typed tensor expressions.
 
 If you are new to the project:
 
-1. Install Chacana with `uv sync --dev` or `pip install -e ".[dev]"`
+1. Install Chacana with `uv sync --extra dev` or `pip install -e ".[dev]"`
 2. Run the example below with `examples/basic.toml`
 3. Read [`docs/getting-started/quickstart.md`](docs/getting-started/quickstart.md) for the complete first-run workflow
 4. Use [`docs/index.md`](docs/index.md) for the documentation hub and [`docs/api/index.md`](docs/api/index.md) for the Python API
@@ -27,7 +27,7 @@ If you are new to the project:
 ## Installation
 
 ```bash
-uv sync --dev
+uv sync --extra dev
 ```
 
 Or with pip:
