@@ -355,6 +355,30 @@ describe("fromLatex", () => {
       expect(result.value).toBe("L(X, A) + L(Y, B)");
     }
   });
+
+  it("converts \\nabla_{e} T^{bc} to covariant derivative suffix", () => {
+    const result = fromLatex("\\nabla_{e} T^{bc}");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("T{^b ^c ;e}");
+    }
+  });
+
+  it("converts \\nabla with single-char subscript without braces", () => {
+    const result = fromLatex("\\nabla_e T^{bc}");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("T{^b ^c ;e}");
+    }
+  });
+
+  it("handles \\nabla in product with other tensors", () => {
+    const result = fromLatex("R^{a}_{bcd} \\nabla_{e} T^{bc}");
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toBe("R{^a _b _c _d} T{^b ^c ;e}");
+    }
+  });
 });
 
 // --- roundtrip test ---

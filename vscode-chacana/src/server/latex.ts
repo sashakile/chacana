@@ -146,9 +146,16 @@ export function fromLatex(input: string): FromLatexResult {
   s = s.replace(/\\left\s*/g, "");
   s = s.replace(/\\right\s*/g, "");
 
-  // Sentinels prevent the index regex from consuming the Lie derivative subscript.
+  // Sentinels prevent the index regex from consuming operator subscripts.
   s = s.replace(/\\mathcal\{L\}_\{([^}]+)\}\s*/g, (_match, sub: string) => {
     return `__LIE__${latexToGreek(sub)}__LIESEP__`;
+  });
+
+  // Handle \nabla_{e} T^{bc} → T{^b ^c ;e} via sentinel
+  // Supports both \nabla_{label} and \nabla_label (single char without braces)
+  s = s.replace(/\\nabla(?:_\{([^}]+)\}|_([A-Za-z]))\s*/g, (_match, idx1: string, idx2: string) => {
+    const idx = (idx1 || idx2).trim();
+    return `__COVD__${idx}__SEP__`;
   });
 
   // Handle \det(...) → det(...)
@@ -204,6 +211,13 @@ export function fromLatex(input: string): FromLatexResult {
     (_match, sub: string, body: string) => {
       return `L(${sub.trim()}, ${body.trim()})`;
     });
+
+  // Restore covariant derivative sentinels: __COVD__e__SEP__T{^b ^c}
+  // becomes T{^b ^c ;e}
+  s = s.replace(/__COVD__(\w+)__SEP__(\w+\{[^}]*\})/g, (_match, idx: string, tensor: string) => {
+    // Insert ;idx before the closing brace of the tensor
+    return tensor.replace(/\}$/, ` ;${idx}}`);
+  });
 
   // Clean up whitespace
   s = s.replace(/\s+/g, " ").trim();
