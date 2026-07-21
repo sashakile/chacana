@@ -53,7 +53,7 @@ ts-test:
     cd tree-sitter-chacana && npx tree-sitter test
 
 # Generate and test tree-sitter parser
-ts-all: ts-generate ts-test
+ts-all: ts-setup ts-generate ts-test
 
 # Build docs
 docs-build:
