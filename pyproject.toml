@@ -25,6 +25,9 @@ docs = [
     "mkdocs-literate-nav>=0.6",
 ]
 
+[project.scripts]
+chacana = "chacana.__main__:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/chacana"]
 

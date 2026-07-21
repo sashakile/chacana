@@ -178,3 +178,36 @@ manifold = "M"
 rank = 3
 index_pattern = ["Covar", "Covar", "Covar"]
 """)
+
+
+@pytest.fixture
+def basic_context_file(tmp_path) -> str:
+    """Write the basic context to a temp file and return the path."""
+    toml = """
+[manifold.M]
+dimension = 4
+index_type = "Latin"
+
+[tensor.R]
+manifold = "M"
+rank = 4
+index_pattern = ["Contra", "Covar", "Covar", "Covar"]
+
+[tensor.T]
+manifold = "M"
+rank = 2
+index_pattern = ["Contra", "Covar"]
+
+[tensor.A]
+manifold = "M"
+rank = 1
+index_pattern = ["Contra"]
+
+[tensor.B]
+manifold = "M"
+rank = 1
+index_pattern = ["Contra"]
+"""
+    path = tmp_path / "basic_context.toml"
+    path.write_text(toml)
+    return str(path)
