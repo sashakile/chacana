@@ -37,7 +37,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
       - uses: astral-sh/setup-uv@v5
+      - run: cd vscode-chacana && npm ci && npm run build
+      - run: cp vscode-chacana/dist/browser/chacana-checker.js docs/assets/js/chacana-checker.js
       - run: uv sync --extra docs
       - name: Build docs (strict)
         run: uv run mkdocs build --strict

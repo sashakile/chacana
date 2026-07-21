@@ -55,8 +55,16 @@ ts-test:
 # Generate and test tree-sitter parser
 ts-all: ts-setup ts-generate ts-test
 
-# Build docs
-docs-build:
+# Build the vscode-chacana browser bundle
+ts-build:
+    cd vscode-chacana && npm run build
+
+# Sync the vscode-chacana browser bundle to docs assets
+ts-sync-docs:
+    cp vscode-chacana/dist/browser/chacana-checker.js docs/assets/js/chacana-checker.js
+
+# Build docs (requires ts-build first)
+docs-build: ts-sync-docs
     uv run mkdocs build --strict
 
 # Serve docs locally
